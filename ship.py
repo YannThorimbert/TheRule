@@ -6,6 +6,7 @@ import parameters as p
 import graphics
 from bullet import Bullet
 
+
 class Ship:
     id = 0
     debris = None
@@ -33,6 +34,16 @@ class Ship:
                                                 "sun_angle":40,
                                                 "alpha_factor":0.6})
         self.smoking = False
+        self.original_img = self.element.get_image()
+
+    def paint(self, hint):
+        img = hint.paint(self.element.get_image())
+        self.element.set_image(img) #enlever ? tous les set_image
+
+    def set_angle(self, deg):
+        img = pygame.transform.rotate(self.original_img, deg)
+        self.element.set_image(img)
+##        self.element.set_size(img.get_size())
 
     def process_bullets(self):
         for bullet in p.game.bullets:
@@ -63,6 +74,9 @@ class Ship:
     def refresh(self):
         self.process_physics()
         self.move(self.vel)
+##        if self.id > p.game.rail.id: doesnt work
+##            angle = self.vel.angle_to(V2(0,-1))
+##            self.set_angle(angle)
         self.process_bullets()
         if self.life <= 0:
             if self.debris:
@@ -92,9 +106,12 @@ class Ship:
 
 class EnnemySimple(Ship):
     color = (255,0,0)
+    min_size = 12
+    max_size = 50
+
 
     def __init__(self, pos):
-        size = (random.randint(10,50),)*2
+        size = (random.randint(self.min_size, self.max_size),)*2
         life = 2*size[0]*p.IA_LIFE
         bullets = life
         Ship.__init__(self, size, life, pos, bullets)
@@ -114,9 +131,11 @@ class EnnemySimple(Ship):
 
 class EnnemyFollower(Ship):
     color = (255,255,0)
+    min_size = 12
+    max_size = 50
 
     def __init__(self, pos):
-        size = (random.randint(10,50),)*2
+        size = (random.randint(self.min_size,self.max_size),)*2
         life = 2*size[0]*p.IA_LIFE
         bullets = life
         Ship.__init__(self, size, life, pos, bullets)
@@ -141,10 +160,12 @@ class EnnemyFollower(Ship):
 
 class LifeStock(Ship):
     color = (255,255,255)
+    min_size = 10
+    max_size = 50
 
     def __init__(self, pos):
         life = 100
-        size = (random.randint(1,5)*10,)*2
+        size = (random.randint(self.min_size,self.max_size),)*2
         Ship.__init__(self, size, life, pos, 0)
         self.can_explode = False
 
@@ -159,10 +180,12 @@ class LifeStock(Ship):
 
 class BulletStock(Ship):
     color = (0,0,0)
+    min_size = 10
+    max_size = 50
 
     def __init__(self, pos):
         life = 100
-        size = (random.randint(1,5)*10,)*2
+        size = (random.randint(self.min_size,self.max_size)*10,)*2
         Ship.__init__(self, size, life, pos, 0)
         self.can_explode = False
 

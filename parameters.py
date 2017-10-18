@@ -5,7 +5,7 @@ BACKGROUND_TEXTURE = "sand-texture.jpg"
 
 #vessel colors are defined in ship.py
 
-ENGINE_FORCE = 0.8
+ENGINE_FORCE = 0.5
 ENGINE_FORCE_IA = 0.1
 DRAG = 0.1
 IA_LIFE = 0.5
