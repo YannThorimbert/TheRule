@@ -20,6 +20,7 @@ class Ship:
         self.bullets = bullets
         self.max_bullets = bullets
         self.can_explode = True
+        self.hints = []
         self.id = Ship.id
         Ship.id += 1
         if not img:
@@ -185,7 +186,7 @@ class BulletStock(Ship):
 
     def __init__(self, pos):
         life = 100
-        size = (random.randint(self.min_size,self.max_size)*10,)*2
+        size = (random.randint(self.min_size,self.max_size),)*2
         Ship.__init__(self, size, life, pos, 0)
         self.can_explode = False
 

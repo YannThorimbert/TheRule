@@ -49,6 +49,11 @@ class Game:
         self.damage_rail_M = float("inf")
         self.tot_time = 1000
         self.remaining_time = self.tot_time
+        self.hints = []
+
+    def add_hint(self, h):
+        self.hud.hints.add_hint(h)
+        self.hints.append(h)
 
 
     def process_key_pressed(self):
@@ -65,13 +70,23 @@ class Game:
             if self.i%MOD_BULLET == 0:
                 self.hero.shoot((0,-BULLET_SPEED))
 
+    def add_random_ship(self):
+        if self.i % self.ennemy_flux == 0:
+            if random.random() < 0.5:
+                Coming = random.choice(coming)
+                ship = Coming(pos=(random.randint(20,W-20),0))
+                self.add_ship(ship)
+                k = random.randint(0,len(self.hints))
+                hints = random.sample(self.hints,k)
+                for h in hints:
+                    h.paint(ship)
+                    ship.hints.append(h)
+
     def refresh(self):
         mon.append("a")
         for e in self.events:
             e.refresh()
-        if self.i % self.ennemy_flux == 0:
-            Coming = random.choice(coming)
-            self.add_ship(Coming(pos=(random.randint(20,W-20),0)))
+        self.add_random_ship()
         self.process_key_pressed()
         for ship in self.ships:
             ship.ia()
@@ -128,7 +143,7 @@ class Game:
             if rect.left < self.damage_rail_M:
                 self.damage_rail_M = rect.left
         img = self.rail.element.get_image()
-        s = pygame.Surface(rect.size)
+        s = pygame.Surface((rect.w, self.rail.element.get_fus_size()[1]))
         s.fill((255,255,255))
         img.blit(s,(rect.x,0))
         img.set_colorkey((255,255,255))
