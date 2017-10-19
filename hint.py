@@ -40,10 +40,10 @@ class HintRandCircles(Hint):
         self.rect = pygame.Rect((0,0), size)
         self.circle = thorpy.graphics.get_aa_ellipsis(size, color)
         self.img = pygame.Surface(size)
-        self.img = self.img.convert()
+##        self.img = self.img.convert()
         self.img.fill((255,255,255))
         self.img.blit(self.circle, (0,0))
-        self.img.set_colorkey((255,255,255))
+##        self.img.set_colorkey((255,255,255))
 ##        self.img = self.img.convert()
 
 

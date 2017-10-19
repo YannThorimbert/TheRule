@@ -8,7 +8,7 @@ class HintsInfo(thorpy.Element):
         thorpy.Element.__init__(self, elements=[thorpy.make_text("Hints:")])
         self.finish()
         self.set_size(size)
-        self.add_elements([thorpy.Image.make(h.img) for h in hints])
+        self.add_elements([thorpy.Image.make(h.img,colorkey=(255,255,255)) for h in hints])
         thorpy.store(self, mode="h")
 ##        self.set_main_color((200,200,200,50))
 

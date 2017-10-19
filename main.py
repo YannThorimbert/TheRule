@@ -13,13 +13,29 @@ import graphics
     #cumulatives : couleur - forme - texture - bullets
     #doit se tuer lui meme a la fin gnahahah
 
-#enlever les set_image inutiles
-
-#hint circlc est carre sur le hud
-
-#coller correctement le hud a hints
+#ajouter la longueur de jaune en parameter du firesmoke
 
 #on doit deduire l'identite des Autres au fil des parties
+
+#recharges laser et rockets, pas forcement en debut de partie!
+
+##JEUDI:
+#remettre les smokes, et les proposer dans options
+
+#montrer les bons/mauvais vaisseaux quand ils meurent (seulement si leur coord est pa celle du rail)
+
+#sons!
+
+#faire les dix niveaux
+
+##VENDREDI:
+
+#armes
+
+#scenario
+
+#equilibrage
+
 
 # ##############################################################################
 
@@ -38,10 +54,11 @@ p.game = game
 commands = thorpy.commands.Commands(e_background,-1)
 commands.refresh = game.refresh
 
+assert hero.id == 0 and game.rail.id == 1
+
 import hint
-h1 = hint.HintRandSquares("rs", (100,100,255), (5,5))
-game.add_hint(h1)
-game.add_hint(hint.HintRandCircles("rc", (100,255,100), (5,5)))
+game.add_hint(hint.HintRandSquares("rs", (100,100,255), (10,10)))
+game.add_hint(hint.HintRandCircles("rc", (100,255,100), (10,10)))
 
 screen = thorpy.get_screen()
 menu = thorpy.Menu(e_background, fps=60)

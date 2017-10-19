@@ -4,7 +4,7 @@ from pygame.math import Vector2 as V2
 import thorpy
 import parameters as p
 import graphics
-from bullet import Bullet
+from bullet import Bullet, Rocket
 
 
 class Ship:
@@ -19,8 +19,10 @@ class Ship:
         self.vel = V2()
         self.bullets = bullets
         self.max_bullets = bullets
+        self.rockets = 100
+        self.max_rockets = self.rockets
         self.can_explode = True
-        self.hints = []
+        self.hints_ids = set([])
         self.id = Ship.id
         Ship.id += 1
         if not img:
@@ -39,7 +41,7 @@ class Ship:
 
     def paint(self, hint):
         img = hint.paint(self.element.get_image())
-        self.element.set_image(img) #enlever ? tous les set_image
+##        self.element.set_image(img) #enlever ? tous les set_image
 
     def set_angle(self, deg):
         img = pygame.transform.rotate(self.original_img, deg)
@@ -65,6 +67,26 @@ class Ship:
                         else:
                             self.smoking = False
 
+    def process_rockets(self):
+        for rocket in p.game.rockets:
+##            if rocket.from_id != self.id:
+            if self.id > 1:
+                if rocket.visible:
+    ##                if self.element.get_rect().collidepoint(rocket.pos):
+                    r = self.element.get_rect()
+                    if rocket.pos.distance_to(r.center) < r.w:
+                        rocket.visible = False
+                        self.life = -1
+                        if self.debris:
+##                            print("Gen", type(self))
+                            graphics.generate_debris_hit(V2(rocket.pos+(0,-10)),
+                                                V2(rocket.v),
+                                                self.debris)
+                        if self.life < self.max_life/2.:
+                            self.smoking = True
+                        else:
+                            self.smoking = False
+
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
         if self.pos.x > p.W and self.vel.x > 0: #bounce on the right
@@ -79,6 +101,7 @@ class Ship:
 ##            angle = self.vel.angle_to(V2(0,-1))
 ##            self.set_angle(angle)
         self.process_bullets()
+        self.process_rockets()
         if self.life <= 0:
             if self.debris:
                 graphics.generate_debris_explosion(V2(self.element.get_fus_center()), self.debris)
@@ -88,10 +111,10 @@ class Ship:
             p.game.e_background.remove_elements([self.element])
             if self is p.game.hero:
                 p.game.hero_dead.activate()
-            else:
+            elif self.hints_ids == p.game.hints_ids:
                 p.game.score += 1 #faire avec un GameEvent !!!
-        elif self.smoking:
-            graphics.smoke_gen.generate(self.element.get_rect().midtop)
+##        elif self.smoking:
+##            graphics.smoke_gen.generate(self.element.get_rect().midtop)
 
     def move(self, delta):
         self.pos += delta
@@ -104,6 +127,14 @@ class Ship:
             v = V2(vel)
             p.game.bullets.append(Bullet(V2(self.pos)-p.BULLET_SIZE_ON_2, v, self.id))
             self.bullets -= 1
+
+    def shoot_rocket(self, vel):
+        if self.rockets > 0:
+            if len(p.game.rockets) > p.MAX_ROCKET_NUMBER:
+                p.game.rockets.popleft()
+            v = V2(vel)
+            p.game.rockets.append(Rocket(V2(self.pos)-p.ROCKET_SIZE_ON_2, v, self.id))
+            self.rockets -= 1
 
 class EnnemySimple(Ship):
     color = (255,0,0)
@@ -156,7 +187,7 @@ class EnnemyFollower(Ship):
             self.life = -1
         else:
             self.vel += V2(0,1)*p.ENGINE_FORCE_IA
-        graphics.fire_gen.generate(self.pos)
+##        graphics.fire_gen.generate(self.pos)
 
 
 class LifeStock(Ship):
@@ -228,9 +259,9 @@ class Hero(Ship):
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
         if self.pos.x > p.game.damage_rail_M and self.vel.x > 0: #bounce on the right
-            self.vel *= -1
+            self.vel *= -0.9
         elif self.pos.x < p.game.damage_rail_m and self.vel.x < 0: #bounce on the left
-            self.vel *= -1
+            self.vel *= -0.9
 
     def ia(self):
         # process key pressed

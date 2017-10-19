@@ -5,7 +5,7 @@ from pygame.math import Vector2 as V2
 import thorpy
 from ship import coming, Rail
 from hud import HUD
-from parameters import W, H, ENGINE_FORCE, MOD_BULLET, BULLET_SPEED
+from parameters import W, H, ENGINE_FORCE, MOD_BULLET, BULLET_SPEED, ROCKET_SPEED, MOD_ROCKET
 import parameters as p
 import graphics as g
 
@@ -35,6 +35,7 @@ class Game:
         self.screen = thorpy.get_screen()
         self.ships = []
         self.bullets = deque()
+        self.rockets = deque()
         self.hero = hero
         self.rail = Rail(self.hero)
         self.add_ship(self.rail)
@@ -45,15 +46,17 @@ class Game:
         self.hud = HUD()
         self.score = 0
         self.ennemy_flux = 50
-        self.damage_rail_m = -float("inf")
-        self.damage_rail_M = float("inf")
-        self.tot_time = 1000
+        self.damage_rail_m = -1
+        self.damage_rail_M = W + 1
+        self.tot_time = 5000
         self.remaining_time = self.tot_time
         self.hints = []
+        self.hints_ids = set([])
 
     def add_hint(self, h):
         self.hud.hints.add_hint(h)
         self.hints.append(h)
+        self.hints_ids.add(h.id)
 
 
     def process_key_pressed(self):
@@ -69,6 +72,9 @@ class Game:
         if pp[pygame.K_SPACE]:
             if self.i%MOD_BULLET == 0:
                 self.hero.shoot((0,-BULLET_SPEED))
+        elif pp[pygame.K_r]:
+            if self.i%MOD_ROCKET == 0:
+                self.hero.shoot_rocket((0,-ROCKET_SPEED))
 
     def add_random_ship(self):
         if self.i % self.ennemy_flux == 0:
@@ -80,7 +86,7 @@ class Game:
                 hints = random.sample(self.hints,k)
                 for h in hints:
                     h.paint(ship)
-                    ship.hints.append(h)
+                    ship.hints_ids.add(h.id)
 
     def refresh(self):
         mon.append("a")
@@ -95,6 +101,9 @@ class Game:
         # refresh bullets
         for bullet in self.bullets:
             bullet.refresh()
+        # refresh rockets
+        for rocket in self.rockets:
+            rocket.refresh()
         mon.append("c")
         # process smoke
         g.smoke_gen.kill_old_elements()
@@ -118,6 +127,8 @@ class Game:
         mon.append("h")
         for bullet in self.bullets:
             bullet.draw()
+        for rocket in self.rockets:
+            rocket.draw()
         mon.append("i")
         for d in g.all_debris:
             d.draw(self.screen)
@@ -147,7 +158,7 @@ class Game:
         s.fill((255,255,255))
         img.blit(s,(rect.x,0))
         img.set_colorkey((255,255,255))
-        self.rail.element.set_image(img)
+##        self.rail.element.set_image(img)
 
     def showmon(self):
         mon.show()

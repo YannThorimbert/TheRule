@@ -4,6 +4,7 @@ import ship
 from parameters import *
 
 bullet_img = None
+rocket_img = None
 smoke_gen = None
 fire_gen = None
 debris_hero = None
@@ -34,10 +35,15 @@ def generate_debris_hit(pos, vel, generator):
 
 
 def initialize():
-    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris
+    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img
     bullet_img = thorpy.graphics.get_aa_ellipsis((BULLET_SIZE,BULLET_SIZE),
                                                     BULLET_COLOR)
     bullet_img = thorpy.graphics.get_shadow(bullet_img, color=(255,155,0))
+    #
+    rocket_img = thorpy.graphics.get_aa_ellipsis((ROCKET_SIZE,ROCKET_SIZE),
+                                                    ROCKET_COLOR)
+    rocket_img = thorpy.graphics.get_shadow(rocket_img, color=(255,155,0))
+    #
     smoke_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=0.6)
     fire_gen = thorpy.fx.get_fire_smokegen(n=NSMOKE, color=(200,255,155),
                                             grow=0.4, size0=(7,7))
