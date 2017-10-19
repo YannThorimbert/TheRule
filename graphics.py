@@ -1,10 +1,12 @@
 import random
+import pygame
 import thorpy
 import ship
 from parameters import *
 
 bullet_img = None
 rocket_img = None
+laser_gen = None
 smoke_gen = None
 fire_gen = None
 debris_hero = None
@@ -35,7 +37,7 @@ def generate_debris_hit(pos, vel, generator):
 
 
 def initialize():
-    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img
+    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen
     bullet_img = thorpy.graphics.get_aa_ellipsis((BULLET_SIZE,BULLET_SIZE),
                                                     BULLET_COLOR)
     bullet_img = thorpy.graphics.get_shadow(bullet_img, color=(255,155,0))
@@ -45,8 +47,9 @@ def initialize():
     rocket_img = thorpy.graphics.get_shadow(rocket_img, color=(255,155,0))
     #
     smoke_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=0.6)
-    fire_gen = thorpy.fx.get_fire_smokegen(n=NSMOKE, color=(200,255,155),
-                                            grow=0.4, size0=(7,7))
+    fire_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=1.)
+##    fire_gen = thorpy.fx.get_fire_smokegen(n=NSMOKE, color=(200,255,155),
+##                                            grow=0.4, size0=(7,7))
     debris_hero = thorpy.fx.get_debris_generator(duration=50,
                                                      color=ship.Hero.color,
                                                      max_size=8)

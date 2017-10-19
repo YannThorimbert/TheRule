@@ -19,8 +19,6 @@ class Ship:
         self.vel = V2()
         self.bullets = bullets
         self.max_bullets = bullets
-        self.rockets = 100
-        self.max_rockets = self.rockets
         self.can_explode = True
         self.hints_ids = set([])
         self.id = Ship.id
@@ -128,13 +126,6 @@ class Ship:
             p.game.bullets.append(Bullet(V2(self.pos)-p.BULLET_SIZE_ON_2, v, self.id))
             self.bullets -= 1
 
-    def shoot_rocket(self, vel):
-        if self.rockets > 0:
-            if len(p.game.rockets) > p.MAX_ROCKET_NUMBER:
-                p.game.rockets.popleft()
-            v = V2(vel)
-            p.game.rockets.append(Rocket(V2(self.pos)-p.ROCKET_SIZE_ON_2, v, self.id))
-            self.rockets -= 1
 
 class EnnemySimple(Ship):
     color = (255,0,0)
@@ -256,6 +247,12 @@ class Rail(Ship):
 class Hero(Ship):
     color = (0,0,255)
 
+    def __init__(self, size, life, pos, bullets=100, shadow=True, img=None):
+        Ship.__init__(self, size, life, pos, bullets, shadow, img)
+        self.rockets = 100
+##        self.max_rockets = self.rockets
+        self.laser = 100
+
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
         if self.pos.x > p.game.damage_rail_M and self.vel.x > 0: #bounce on the right
@@ -273,5 +270,18 @@ class Hero(Ship):
         if pp[pygame.K_SPACE]:
             if p.game.i%p.MOD_BULLET == 0:
                 self.shoot((0,-p.BULLET_SPEED))
+
+    def shoot_rocket(self, vel):
+        if self.rockets > 0:
+            if len(p.game.rockets) > p.MAX_ROCKET_NUMBER:
+                p.game.rockets.popleft()
+            v = V2(vel)
+            p.game.rockets.append(Rocket(V2(self.pos)-p.ROCKET_SIZE_ON_2, v, self.id))
+            self.rockets -= 1
+
+    def shoot_laser(self):
+        if self.laser > 0:
+            p.game.laser = p.LASER_TIME
+            self.laser -= 1
 
 coming = [EnnemySimple,EnnemyFollower,]*3+ [LifeStock, BulletStock]

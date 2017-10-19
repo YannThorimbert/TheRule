@@ -35,10 +35,19 @@ class HUD:
         self.score.stick_to("screen", "left", "left")
         self.score.stick_to("screen","bottom","bottom", False)
         self.score.move((2,-5))
+        #
+        self.rockets = thorpy.make_text("Rockets: 0")
+        self.laser = thorpy.make_text("Laser: 0")
+        #
         self.bullets = thorpy.LifeBar.make("Bullets", size=(150,20))
         self.bullets.stick_to("screen", "right", "right")
         self.bullets.stick_to("screen", "bottom", "bottom", False)
-        self.bullets.move((-2,-5))
+        self.bullets.move((-2,-5 - self.laser.get_fus_size()[1] - self.rockets.get_fus_size()[1]))
+        #
+        self.rockets.stick_to(self.bullets, "bottom", "top")
+        self.rockets.move((0,2))
+        self.laser.stick_to(self.rockets, "bottom", "top")
+##        self.rockets.move((0,2))
 
 
     def refresh_and_draw(self):
@@ -48,6 +57,9 @@ class HUD:
         self.life.blit(thorpy.get_screen(), hero.life/hero.max_life)
         self.bullets.set_life(hero.bullets/hero.max_bullets)
         self.bullets.blit()
+        self.rockets.set_text("Rockets: "+str(hero.rockets))
+        self.rockets.blit()
+        self.laser.blit()
         self.score.blit()
         self.time.set_life(parameters.game.remaining_time)
         self.time.blit()

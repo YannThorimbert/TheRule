@@ -13,10 +13,13 @@ import graphics
     #cumulatives : couleur - forme - texture - bullets
     #doit se tuer lui meme a la fin gnahahah
 
+#lacher de la fumee a disparition du laser
+
 #ajouter la longueur de jaune en parameter du firesmoke
 
 #on doit deduire l'identite des Autres au fil des parties
 
+#afficher rockets et lasers
 #recharges laser et rockets, pas forcement en debut de partie!
 
 ##JEUDI:

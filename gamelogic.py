@@ -52,6 +52,10 @@ class Game:
         self.remaining_time = self.tot_time
         self.hints = []
         self.hints_ids = set([])
+        self.laser = 0
+        hlaser = self.hero.pos.y-self.hero.element.get_fus_size()[1]/2.
+        self.laser_img = pygame.Surface((p.LASER_W,hlaser))
+        self.laser_img.fill((255,255,0))
 
     def add_hint(self, h):
         self.hud.hints.add_hint(h)
@@ -75,6 +79,8 @@ class Game:
         elif pp[pygame.K_r]:
             if self.i%MOD_ROCKET == 0:
                 self.hero.shoot_rocket((0,-ROCKET_SPEED))
+        elif pp[pygame.K_LSHIFT]:
+            self.hero.shoot_laser()
 
     def add_random_ship(self):
         if self.i % self.ennemy_flux == 0:
@@ -87,6 +93,14 @@ class Game:
                 for h in hints:
                     h.paint(ship)
                     ship.hints_ids.add(h.id)
+
+    def draw_laser(self):
+        x = self.hero.pos.x - p.LASER_W/2.
+        self.screen.blit(self.laser_img, (x,0))
+        if self.laser == 0:#last
+            r = self.laser_img.get_rect()
+            for y in range(r.y,r.bottom,10):
+                g.fire_gen.generate((self.hero.pos.x,y))
 
     def refresh(self):
         mon.append("a")
@@ -129,6 +143,9 @@ class Game:
             bullet.draw()
         for rocket in self.rockets:
             rocket.draw()
+        if self.laser > 0:
+            self.laser -= 1
+            self.draw_laser()
         mon.append("i")
         for d in g.all_debris:
             d.draw(self.screen)
