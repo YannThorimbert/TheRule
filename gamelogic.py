@@ -26,6 +26,36 @@ class GameEvent:
         if self.game.i - self.i >= self.delay:
             self.reaction()
 
+
+def get_imgs_alert(text, color=(255,0,0), size1=20, size2=40):
+    imgs = []
+    element = thorpy.make_text(text, size1, color)
+    for s in range(size1, size2):
+        element.set_font_size(s)
+        imgs.append(element.get_image())
+    return imgs
+
+class GameAlert:
+
+    def __init__(self, imgs, duration, pos):
+        self.imgs = imgs
+        self.duration = duration
+        self.pos = pos
+        self.time = 0
+
+    def refresh(self,surface,y):
+        n = min(self.time, len(self.imgs)-1)
+        img = self.imgs[n]
+        r = img.get_rect()
+        if self.pos:
+            r.center = self.pos
+        else:
+            r.centerx = W/2
+            r.top = y
+        surface.blit(img, r)
+        self.time += 1
+        return r.h
+
 mon = monitoring.Monitor()
 
 class Game:
@@ -56,18 +86,32 @@ class Game:
         hlaser = self.hero.pos.y-self.hero.element.get_fus_size()[1]/2.
         self.laser_img = pygame.Surface((p.LASER_W,hlaser))
         self.laser_img.fill((255,255,0))
+        self.laser_rect = self.laser_img.get_rect()
+        #
+        self.a_imgs = {}
+        self.a_imgs["nice"] = get_imgs_alert("Right kill !", (200,255,0))
+        self.a_imgs["bad"] = get_imgs_alert("Bad kill", (155,0,0), 20, 30)
+        self.a_imgs["dead"] = get_imgs_alert("You are dead", (155,0,0), 40, 60)
+        self.alerts = []
+        #
+##        self.sound_collection = thorpy.SoundCollection()
+##        self.sounds.add("explosion1.ogv", "explosion1")
+
+    def add_alert(self, a, duration=100, pos=None):
+        self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
 
     def add_hint(self, h):
         self.hud.hints.add_hint(h)
         self.hints.append(h)
         self.hints_ids.add(h.id)
 
-
     def process_key_pressed(self):
         pp = pygame.key.get_pressed()
         if pp[pygame.K_LEFT]:
+            self.laser_rect.centerx = self.hero.pos.x
             move_hero_left()
         elif pp[pygame.K_RIGHT]:
+            self.laser_rect.centerx = self.hero.pos.x
             move_hero_right()
 ##        elif pp[pygame.K_UP]:
 ##            move_hero_up()
@@ -88,11 +132,12 @@ class Game:
                 Coming = random.choice(coming)
                 ship = Coming(pos=(random.randint(20,W-20),0))
                 self.add_ship(ship)
-                k = random.randint(0,len(self.hints))
-                hints = random.sample(self.hints,k)
-                for h in hints:
-                    h.paint(ship)
-                    ship.hints_ids.add(h.id)
+                if not ship.is_friend:
+                    k = random.randint(0,len(self.hints))
+                    hints = random.sample(self.hints,k)
+                    for h in hints:
+                        h.paint(ship)
+                        ship.hints_ids.add(h.id)
 
     def draw_laser(self):
         x = self.hero.pos.x - p.LASER_W/2.
@@ -151,6 +196,7 @@ class Game:
             d.draw(self.screen)
         mon.append("j")
         self.hud.refresh_and_draw()
+        self.refresh_and_draw_alerts()
         pygame.display.flip()
         self.i += 1
         mon.append("k")
@@ -158,6 +204,15 @@ class Game:
         if self.remaining_time < 0:
             thorpy.functions.quit_menu_func()
             print("FINI")
+
+    def refresh_and_draw_alerts(self):
+        y = 30
+        for i in range(len(self.alerts)-1,-1,-1):
+            a = self.alerts[i]
+            y += a.refresh(self.screen, y)
+            if a.time > a.duration:
+                a.time = 0
+                self.alerts.pop(i)
 
     def add_ship(self, ship):
         self.ships.append(ship)

@@ -13,19 +13,13 @@ import graphics
     #cumulatives : couleur - forme - texture - bullets
     #doit se tuer lui meme a la fin gnahahah
 
-#lacher de la fumee a disparition du laser
-
-#ajouter la longueur de jaune en parameter du firesmoke
-
 #on doit deduire l'identite des Autres au fil des parties
 
-#afficher rockets et lasers
-#recharges laser et rockets, pas forcement en debut de partie!
+#recharges laser et rockets et tout, pas forcement en debut de partie!
+##logos croix rouge etc
 
 ##JEUDI:
-#remettre les smokes, et les proposer dans options
-
-#montrer les bons/mauvais vaisseaux quand ils meurent (seulement si leur coord est pa celle du rail)
+#options : smoke
 
 #sons!
 

@@ -36,6 +36,7 @@ class Ship:
                                                 "alpha_factor":0.6})
         self.smoking = False
         self.original_img = self.element.get_image()
+        self.is_friend = False
 
     def paint(self, hint):
         img = hint.paint(self.element.get_image())
@@ -85,6 +86,20 @@ class Ship:
                         else:
                             self.smoking = False
 
+    def process_laser(self):
+        if self.id > 1:
+            if p.game.laser > 0:
+##                print(abs(self.pos.x - p.game.hero.pos.x))
+                dx = abs(self.pos.x - p.game.hero.pos.x)
+                if dx < (p.LASER_W+self.size[0])//2:
+##                print(self.element.get_rect().colliderect(p.game.laser_rect))
+##                if self.element.get_rect().colliderect(p.game.laser_rect):
+                    self.life = -1
+##                    if self.debris:
+##                        graphics.generate_debris_hit(V2(self.pos),
+##                                            V2(self.vel),
+##                                            self.debris)
+
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
         if self.pos.x > p.W and self.vel.x > 0: #bounce on the right
@@ -100,6 +115,7 @@ class Ship:
 ##            self.set_angle(angle)
         self.process_bullets()
         self.process_rockets()
+        self.process_laser()
         if self.life <= 0:
             if self.debris:
                 graphics.generate_debris_explosion(V2(self.element.get_fus_center()), self.debris)
@@ -109,8 +125,16 @@ class Ship:
             p.game.e_background.remove_elements([self.element])
             if self is p.game.hero:
                 p.game.hero_dead.activate()
+                p.game.add_alert("dead",duration=400,pos=(p.W/2,p.H/2))
             elif self.hints_ids == p.game.hints_ids:
-                p.game.score += 1 #faire avec un GameEvent !!!
+                if self.pos.y < p.game.hero.pos.y:
+                    p.game.add_alert("nice",pos=self.pos)
+##                p.game.score += int(self.max_life)
+                    p.game.score += 1
+            elif self.is_friend:
+                if not self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
+                    print(self.element.get_rect(), p.game.hero.element.get_rect())
+                    p.game.add_alert("bad",pos=self.pos)
 ##        elif self.smoking:
 ##            graphics.smoke_gen.generate(self.element.get_rect().midtop)
 
@@ -125,6 +149,22 @@ class Ship:
             v = V2(vel)
             p.game.bullets.append(Bullet(V2(self.pos)-p.BULLET_SIZE_ON_2, v, self.id))
             self.bullets -= 1
+
+
+class EnnemyStatic(Ship):
+    color = (100,100,100)
+    min_size = 12
+    max_size = 50
+
+
+    def __init__(self, pos):
+        size = (random.randint(self.min_size, self.max_size),)*2
+        life = 2*size[0]*p.IA_LIFE
+        bullets = life
+        Ship.__init__(self, size, life, pos, bullets)
+
+    def ia(self):
+        pass
 
 
 class EnnemySimple(Ship):
@@ -187,10 +227,11 @@ class LifeStock(Ship):
     max_size = 50
 
     def __init__(self, pos):
-        life = 100
         size = (random.randint(self.min_size,self.max_size),)*2
+        life =  2*size[0]*p.IA_LIFE
         Ship.__init__(self, size, life, pos, 0)
-        self.can_explode = False
+        self.can_explode = True
+        self.is_friend = True
 
 
     def ia(self):
@@ -207,10 +248,11 @@ class BulletStock(Ship):
     max_size = 50
 
     def __init__(self, pos):
-        life = 100
         size = (random.randint(self.min_size,self.max_size),)*2
+        life =  2*size[0]*p.IA_LIFE
         Ship.__init__(self, size, life, pos, 0)
-        self.can_explode = False
+        self.can_explode = True
+        self.is_friend = True
 
     def ia(self):
         if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
@@ -284,4 +326,4 @@ class Hero(Ship):
             p.game.laser = p.LASER_TIME
             self.laser -= 1
 
-coming = [EnnemySimple,EnnemyFollower,]*3+ [LifeStock, BulletStock]
+coming = [EnnemySimple,EnnemyFollower]*3+ [LifeStock, BulletStock]

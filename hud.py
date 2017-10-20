@@ -5,7 +5,7 @@ import parameters
 class HintsInfo(thorpy.Element):
 
     def __init__(self, size, hints): #faire pressed!
-        thorpy.Element.__init__(self, elements=[thorpy.make_text("Hints:")])
+        thorpy.Element.__init__(self, elements=[thorpy.make_text("Rule:")])
         self.finish()
         self.set_size(size)
         self.add_elements([thorpy.Image.make(h.img,colorkey=(255,255,255)) for h in hints])

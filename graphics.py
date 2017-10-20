@@ -47,7 +47,7 @@ def initialize():
     rocket_img = thorpy.graphics.get_shadow(rocket_img, color=(255,155,0))
     #
     smoke_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=0.6)
-    fire_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=1.)
+    fire_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(100,100,100), grow=0.4)
 ##    fire_gen = thorpy.fx.get_fire_smokegen(n=NSMOKE, color=(200,255,155),
 ##                                            grow=0.4, size0=(7,7))
     debris_hero = thorpy.fx.get_debris_generator(duration=50,
