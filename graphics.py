@@ -72,12 +72,16 @@ def get_laser_img(g):
     return laser_img
 
 
-def initialize():
-    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen, container_imgs
-    thorpy.get_screen().blit(thorpy.load_image("Calinou3.png"), (0,0))
+def get_title():
     title = thorpy.make_text("The Rule", 50, (230,230,255))
     title.center(axis=(True,False))
     title.move((0, 50))
+    return title
+
+def initialize():
+    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen, container_imgs
+    thorpy.get_screen().blit(thorpy.load_image("Calinou2.png"), (0,0))
+    title = get_title()
     title.blit()
     loadbar = thorpy.LifeBar.make("Building smoke generators...", size=(int(0.9*W),30), font_size=10)
     loadbar.center()
@@ -102,8 +106,9 @@ def initialize():
         loadbar.set_life(0.1+size/3.*0.4)
         loadbar.unblit_and_reblit()
         for i in range(10):
-            e = thorpy.AnimatedGif.make(random.choice(["explosion-illugion.gif",
-                                                        "explosion.gif"]))
+##            e = thorpy.AnimatedGif.make(random.choice(["explosion-illugion.gif",
+##                                                        "explosion.gif"]))
+            e = thorpy.AnimatedGif.make(random.choice(["explosion.gif"]))
             e.resize_frames(expl_sizes[size])
             e.set_visible(False)
             e.nread = 8

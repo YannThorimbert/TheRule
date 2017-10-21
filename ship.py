@@ -153,9 +153,8 @@ class Ship:
         return False
 
 
-
     def at_explode(self):
-        pass
+        p.game.sounds.explosion.play()
 
     def process_bullets(self):
         for bullet in p.game.bullets:
@@ -239,6 +238,7 @@ class Ship:
 
     def shoot(self, vel):
         if self.bullets > 0:
+            p.game.sounds.bullet.play()
             if len(p.game.bullets) > p.MAX_BULLET_NUMBER:
                 p.game.bullets.popleft()
             v = V2(vel)
@@ -356,7 +356,7 @@ class LaserContainer(ContainerShip):
 
 class NukeContainer(ContainerShip):
     name = "nuke"
-    prob = 100
+    prob = 1
     speed = 0.8
     value = p.MAX_NUKE_NUMBER
     def container_action(self):
@@ -427,6 +427,7 @@ class Hero(Ship):
 
     def shoot_rocket(self, vel):
         if self.rockets > 0:
+            p.game.sounds.rocket.play()
             if len(p.game.rockets) > p.MAX_ROCKET_NUMBER:
                 p.game.rockets.popleft()
             v = V2(vel)
@@ -435,6 +436,7 @@ class Hero(Ship):
 
     def shoot_laser(self):
         if self.laser > 0:
+            p.game.sounds.laser.play()
             p.game.laser = p.LASER_TIME
             self.laser -= 1
 
@@ -444,6 +446,7 @@ class Hero(Ship):
             nuke_explosion()
 
 def nuke_explosion():
+    p.game.sounds.nuke.play()
     for ship in p.game.ships[2:]:
         ship.life = -1
         for i in range(10):

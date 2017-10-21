@@ -1,7 +1,7 @@
 from pygame.math import Vector2 as V2
 
 W,H = 400,600
-BACKGROUND_TEXTURES = "sand-texture.jpg",# "rock.png", "Calinou1.png", "Calinou2.png", "Calinou3.png"
+BACKGROUND_TEXTURES = "sand-texture.jpg", "rock.png", "Calinou1.png", "Calinou2.png", "Calinou3.png"
 
 ##ENNEMIES_SIZES = [0.3, 0.5]
 ENNEMIES_SIZES = [0.2]
@@ -31,8 +31,8 @@ BULLET_SIZE_ON_2 = V2(BULLET_SIZE, BULLET_SIZE)/2
 
 MAX_BULLET_NUMBER = 100 #max number of bullets on screen
 MAX_ROCKET_NUMBER = 100 #max number of bullets on screen
-MAX_LASER_NUMBER = 100
-MAX_NUKE_NUMBER = 100
+MAX_LASER_NUMBER = 1
+MAX_NUKE_NUMBER = 1
 
 CONTAINER_SIZE = (20,20)
 

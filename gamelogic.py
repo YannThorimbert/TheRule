@@ -62,7 +62,7 @@ class Game:
         self.rail = shipm.Rail(self.hero)
         self.add_ship(self.rail)
         self.add_ship(hero)
-        self.i = 0
+        self.i = 1
         self.hero_dead = GameEvent(50,thorpy.functions.quit_menu_func,self)
         self.events = [self.hero_dead]
         self.hud = HUD()
@@ -75,7 +75,7 @@ class Game:
         self.ennemy_prob
         self.damage_rail_m = -1
         self.damage_rail_M = W + 1
-        self.tot_time = 5000
+        self.tot_time = 1000
         self.remaining_time = self.tot_time
         self.hints = []
         self.hints_ids = set([])
@@ -94,11 +94,19 @@ class Game:
         self.a_imgs["item"] = g.get_imgs_alert("Got item", size1=20, size2=30)
         self.alerts = []
         #
-##        self.sound_collection = thorpy.SoundCollection()
-##        self.sounds.add("explosion1.ogv", "explosion1")
+        self.sounds = thorpy.SoundCollection()
+##        self.sounds.add("battlestar10_2.wav", "explosion1")
+        self.sounds.add("MikeKoenig2.wav", "bullet")
+        self.sounds.add("SoundExplorer2.wav", "nuke")
+        self.sounds.add("MikeKoenig3b.wav", "rocket")
+        self.sounds.add("MikeKoenig4.wav", "laser")
+        self.sounds.add("ljudman2.wav", "explosion")
+        self.sounds.bullet.set_volume(0.1)
         #
         self.e_pause = thorpy.make_text("Pause - press a key to continue", 20, (255,255,0))
         self.e_pause.center(element=self.e_background)
+        #
+        self.scenario = {}
 
     def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
@@ -141,17 +149,13 @@ class Game:
         if self.i % self.ship_flux == 0:
             if random.random() < self.ship_prob:
                 if random.random() < self.ennemy_prob:
-                    Coming = random.choice(shipm.coming_ennemies)
-                    factor = random.choice(p.ENNEMIES_SIZES)
-                    type_ = random.choice(shipm.ennemies_fn)
-                    mesh = shipm.ennemies_meshes[(type_, factor)]
+                    ship = random_ennemy()
                 else:
-                    Coming = random.choice(shipm.coming_friends)
-                    mesh = shipm.container_mesh
-                randpos = (random.randint(20,W-20),0)
-                print(Coming)
-                ship = Coming(mesh, randpos)
+                    ship = random_friend()
                 self.add_ship(ship)
+##        scenario = self.scenario.pop(self.i)
+##        if scenario:
+##            self.add_ship(scenario)
 
     def draw_laser(self):
         x = self.hero.pos.x - p.LASER_W/2.
@@ -162,51 +166,48 @@ class Game:
                 g.fire_gen.generate((self.hero.pos.x,y))
 
     def refresh(self):
-        mon.append("a")
+        ##mon.append("a")
         for e in self.events:
             e.refresh()
         self.add_random_ship()
         pos = pygame.mouse.get_pos()
-##        for ship in self.ships:
-##            if ship.collide(pos):
-##                print(ship, self.i)
         self.process_key_pressed()
         #refresh ships logics
         for ship in self.ships:
             ship.ia()
             ship.refresh()
-        mon.append("b")
+        ###mon.append("b")
         # refresh bullets
         for bullet in self.bullets:
             bullet.refresh()
         # refresh rockets
         for rocket in self.rockets:
             rocket.refresh()
-        mon.append("c")
+        ###mon.append("c")
         # process smoke
         g.smoke_gen.kill_old_elements()
         g.fire_gen.kill_old_elements()
-        mon.append("d")
+        ###mon.append("d")
         if p.NSMOKE > 1:
             g.smoke_gen.update_physics(V2())
             g.fire_gen.update_physics(V2())
-        mon.append("e")
+        ###mon.append("e")
         # process debris
         for d in shipm.fn_debris.values():
             d.kill_old_elements(self.screen.get_rect())
             d.update_physics(dt=0.1)
-        mon.append("f")
+        ###mon.append("f")
         # refresh screen
         self.e_background.blit()
         for s in self.ships:
             if s.shadow:
                 self.screen.blit(s.shadow, V2(s.rect.topleft)+p.SHADOW_POS)
             self.screen.blit(s.img, s.rect)
-        mon.append("g")
+        ###mon.append("g")
         if p.NSMOKE > 1:
             g.smoke_gen.draw(self.screen)
             g.fire_gen.draw(self.screen)
-        mon.append("h")
+        ###mon.append("h")
         # draw weapons
         for bullet in self.bullets:
             bullet.draw()
@@ -215,16 +216,16 @@ class Game:
         if self.laser > 0:
             self.laser -= 1
             self.draw_laser()
-        mon.append("i")
+        ###mon.append("i")
         #draw debris
         for d in shipm.fn_debris.values():
             d.draw(self.screen)
-        mon.append("j")
+        ###mon.append("j")
         self.hud.refresh_and_draw()
         self.refresh_and_draw_alerts()
         pygame.display.flip()
         self.i += 1
-        mon.append("k")
+        ###mon.append("k")
         self.remaining_time = (self.tot_time - self.i) / self.tot_time
         if self.remaining_time < 0:
             thorpy.functions.quit_menu_func()
@@ -257,8 +258,8 @@ class Game:
         img.set_colorkey((255,255,255))
 ##        self.rail.element.set_image(img)
 
-    def showmon(self):
-        mon.show()
+##    def showmon(self):
+        ###mon.show()
 
 def move_hero_left():
     p.game.hero.vel[0] -= ENGINE_FORCE
@@ -276,3 +277,50 @@ def move_hero_down():
 ##e->f: 17.482862172074608
 ##f->g: 8.166405939950124
 ##g->h: 4.8219657055277985
+
+
+
+
+def random_ennemy(pos=None, ship_class=None, factor=None, type_=None, mesh=None):
+    if not ship_class:
+        Coming = random.choice(shipm.coming_ennemies)
+    if not factor:
+        factor = random.choice(p.ENNEMIES_SIZES)
+    if not type_:
+        type_ = random.choice(shipm.ennemies_fn)
+    if not mesh:
+        mesh = shipm.ennemies_meshes[(type_, factor)]
+    if not pos:
+        pos = (random.randint(20,W-20),0)
+    elif pos == "auto":
+        pos = W//2, 0
+    return Coming(mesh, pos)
+
+def random_friend(pos=None, ship_class=None):
+    if not ship_class:
+        Coming = random.choice(shipm.coming_friends)
+    mesh = shipm.container_mesh
+    if not pos:
+        pos = (random.randint(20,W-20),0)
+    elif pos == "auto":
+        pos = W//2, 0
+    return Coming(mesh, pos)
+
+
+
+##class ScenarioEvent:
+##
+##    def __init__(self, i, ship, pos=None, text=None):
+##        self.i = i
+##        self.ship = ship_class()
+##
+##
+##class Scenario:
+##
+##    def __init__(self):
+##        self.events = []
+##
+##    def add_ship(self, i, ship, pos=None, text=None):
+##        event =
+
+
