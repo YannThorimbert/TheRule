@@ -21,19 +21,17 @@ import graphics
 
 #scenario
 
-#si nuke explose,explose vraiment
-
-#equilibrage
 
 #textures sans effet au bol
 
 #boss final : hero libre
 
 #sons!
+#equilibrage
 
 # ##############################################################################
 
-app = thorpy.Application((W,H), "The rule")
+app = thorpy.Application((W,H), "The Rule")
 
 graphics.initialize()
 
@@ -50,9 +48,9 @@ commands.refresh = game.refresh
 
 assert hero.id == 0 and game.rail.id == 1
 
-import hint
-game.add_hint(hint.HintRandSquares("rs", (100,100,255), (10,10)))
-game.add_hint(hint.HintRandCircles("rc", (100,255,100), (10,10)))
+##import hint
+##game.add_hint(hint.HintRandSquares("rs", (100,100,255), (10,10)))
+##game.add_hint(hint.HintRandCircles("rc", (100,255,100), (10,10)))
 
 screen = thorpy.get_screen()
 menu = thorpy.Menu(e_background, fps=60)

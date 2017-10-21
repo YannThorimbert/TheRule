@@ -80,7 +80,7 @@ class Game:
         self.hints = []
         self.hints_ids = set([])
         self.laser = 0
-        hlaser = self.hero.pos.y-self.hero.element.get_fus_size()[1]/2.
+        hlaser = self.hero.pos.y-self.hero.rect.h/2.
 ##        self.laser_img = pygame.Surface((p.LASER_W,hlaser))
 ##        self.laser_img.fill((255,255,0))
         self.laser_img = g.get_laser_img(self)
@@ -132,16 +132,13 @@ class Game:
             if random.random() < self.ship_prob:
                 if random.random() < self.ennemy_prob:
                     Coming = random.choice(coming_ennemies)
+                    mesh = ...
                 else:
                     Coming = random.choice(coming_friends)
-                ship = Coming(pos=(random.randint(20,W-20),0))
+                    mesh = ...
+                randpos = (random.randint(20,W-20),0)
+                ship = Coming(mesh, randpos)
                 self.add_ship(ship)
-                if not ship.is_friend:
-                    k = random.randint(0,len(self.hints))
-                    hints = random.sample(self.hints,k)
-                    for h in hints:
-                        h.paint(ship)
-                        ship.hints_ids.add(h.id)
 
     def draw_laser(self):
         x = self.hero.pos.x - p.LASER_W/2.
@@ -183,6 +180,8 @@ class Game:
         mon.append("f")
         # refresh screen
         self.e_background.blit()
+        for s in self.ships:
+            self.screen.blit(s.img, s.rect)
         mon.append("g")
         if p.NSMOKE > 1:
             g.smoke_gen.draw(self.screen)
@@ -220,7 +219,7 @@ class Game:
 
     def add_ship(self, ship):
         self.ships.append(ship)
-        self.e_background.add_elements([ship.element])
+##        self.e_background.add_elements([ship.element])
 
     def add_rail_damage(self, rect):
         if rect.right < self.hero.pos.x:
@@ -229,8 +228,8 @@ class Game:
         elif rect.left > self.hero.pos.x:
             if rect.left < self.damage_rail_M:
                 self.damage_rail_M = rect.left
-        img = self.rail.element.get_image()
-        s = pygame.Surface((rect.w, self.rail.element.get_fus_size()[1]))
+        img = self.rail.img
+        s = pygame.Surface((rect.w, self.rail.rect.h))
         s.fill((255,255,255))
         img.blit(s,(rect.x,0))
         img.set_colorkey((255,255,255))

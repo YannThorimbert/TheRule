@@ -6,16 +6,43 @@ import parameters as p
 import graphics
 from bullet import Bullet, Rocket
 
+ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,6)]
+container_fn = "xevin1.png"
+ennemies_meshes = None
+container_mesh = None
+
+class ShipMesh:
+
+    def __init__(fn, factor):
+        self.fn = fn
+        self.img = thorpy.load_image(fn, (255,255,255))
+        w,h = self.img.get_size()
+        size = int(factor*w), int(factor*h)
+        self.img = pygame.transform.smoothscale(self.img, size)
+        self.size = self.img.get_size()
+
+def initialize_meshes():
+    global ennemies_meshes, container_mesh
+    for e in ennemies_fn:
+        for factor in p.ENNEMIES_SIZES:
+            ennemies_meshes[(e,factor)] = ShipMesh(e, factor)
+    container_mesh = ShipMesh(container_fn,1.)
+
 
 class Ship:
+    meshname = "noname"
     id = 0
     debris = None
 
-    def __init__(self, size, life, pos, bullets=100, shadow=True, img=None):
-        self.size = size
-        self.life = life
+    def __init__(self, mesh, pos, bullets=100, shadow=True):
+        self.mesh = mesh
+        self.img = self.mesh.img #copy?
+        self.rect = self.img.get_rect()
+        self.size = mesh.size
+        self.life = self.rect.w + self.rect.h
         self.max_life = life
         self.pos = V2(pos)
+        self.rect.center = self.pos
         self.vel = V2()
         self.bullets = bullets
         self.max_bullets = bullets
@@ -23,44 +50,28 @@ class Ship:
         self.hints_ids = set([])
         self.id = Ship.id
         Ship.id += 1
-        if not img:
-            self.element = thorpy.Image.make(color=self.color)
-            self.element.set_size(self.size)
-        else:
-            self.element = thorpy.Image.make(img, colorkey=(255,255,255))
-        if shadow and thorpy.constants.CAN_SHADOWS: #set shadow
-            thorpy.makeup.add_static_shadow(self.element,
-                                            {"target_altitude":5,
-                                                "shadow_radius":3,
-                                                "sun_angle":40,
-                                                "alpha_factor":0.6})
+##        if shadow and thorpy.constants.CAN_SHADOWS: #set shadow
+##            thorpy.makeup.add_static_shadow(self.element,
+##                                            {"target_altitude":5,
+##                                                "shadow_radius":3,
+##                                                "sun_angle":40,
+##                                                "alpha_factor":0.6})
         self.smoking = False
-        self.original_img = self.element.get_image()
+##        self.original_img = self.element.get_image()
         self.is_friend = False
 
     def at_explode(self):
         pass
 
-    def paint(self, hint):
-        img = hint.paint(self.element.get_image())
-##        self.element.set_image(img) #enlever ? tous les set_image
-
-    def set_angle(self, deg):
-        img = pygame.transform.rotate(self.original_img, deg)
-        self.element.set_image(img)
-##        self.element.set_size(img.get_size())
-
     def process_bullets(self):
         for bullet in p.game.bullets:
             if bullet.from_id != self.id:
                 if bullet.visible:
-    ##                if self.element.get_rect().collidepoint(bullet.pos):
-                    r = self.element.get_rect()
+                    r = self.get_rect()
                     if bullet.pos.distance_to(r.center) < r.w:
                         bullet.visible = False
                         self.life -= 1
                         if self.debris:
-##                            print("Gen", type(self))
                             graphics.generate_debris_hit(V2(bullet.pos+(0,-10)),
                                                 V2(bullet.v),
                                                 self.debris)
@@ -71,16 +82,13 @@ class Ship:
 
     def process_rockets(self):
         for rocket in p.game.rockets:
-##            if rocket.from_id != self.id:
             if self.id > 1:
                 if rocket.visible:
-    ##                if self.element.get_rect().collidepoint(rocket.pos):
-                    r = self.element.get_rect()
+                    r = self.get_rect()
                     if rocket.pos.distance_to(r.center) < r.w:
                         rocket.visible = False
                         self.life = -1
                         if self.debris:
-##                            print("Gen", type(self))
                             graphics.generate_debris_hit(V2(rocket.pos+(0,-10)),
                                                 V2(rocket.v),
                                                 self.debris)
@@ -92,16 +100,12 @@ class Ship:
     def process_laser(self):
         if self.id > 1:
             if p.game.laser > 0:
-##                print(abs(self.pos.x - p.game.hero.pos.x))
                 dx = abs(self.pos.x - p.game.hero.pos.x)
                 if dx < (p.LASER_W+self.size[0])//2:
-##                print(self.element.get_rect().colliderect(p.game.laser_rect))
-##                if self.element.get_rect().colliderect(p.game.laser_rect):
                     self.life = -1
-##                    if self.debris:
-##                        graphics.generate_debris_hit(V2(self.pos),
-##                                            V2(self.vel),
-##                                            self.debris)
+                    graphics.generate_debris_hit(V2(self.pos),
+                                        V2(self.vel),
+                                        self.debris)
 
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
@@ -113,19 +117,16 @@ class Ship:
     def refresh(self):
         self.process_physics()
         self.move(self.vel)
-##        if self.id > p.game.rail.id: doesnt work
-##            angle = self.vel.angle_to(V2(0,-1))
-##            self.set_angle(angle)
         self.process_bullets()
         self.process_rockets()
         self.process_laser()
         if self.life <= 0:
             if self.debris:
-                graphics.generate_debris_explosion(V2(self.element.get_fus_center()), self.debris)
+                graphics.generate_debris_explosion(V2(self.pos), self.debris)
             if self.can_explode:
                 graphics.add_explosion(self)
             p.game.ships.remove(self)
-            p.game.e_background.remove_elements([self.element])
+##            p.game.e_background.remove_elements([self.element])
             if self is p.game.hero:
                 p.game.hero_dead.activate()
                 p.game.add_alert("dead",duration=400,pos=(p.W/2,p.H/2))
@@ -135,16 +136,16 @@ class Ship:
 ##                p.game.score += int(self.max_life)
                     p.game.score += 1
             elif self.is_friend:
-                if not self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
-                    print(self.element.get_rect(), p.game.hero.element.get_rect())
+                if not self.get_rect().colliderect(p.game.hero.get_rect()):
+                    print(self.get_rect(), p.game.hero.get_rect())
                     p.game.add_alert("bad",pos=self.pos)
             self.at_explode()
 ##        elif self.smoking:
-##            graphics.smoke_gen.generate(self.element.get_rect().midtop)
+##            graphics.smoke_gen.generate(self.get_rect().midtop)
 
     def move(self, delta):
         self.pos += delta
-        self.element.set_center(self.pos)
+        self.rect.center = self.pos
 
     def shoot(self, vel):
         if self.bullets > 0:
@@ -157,15 +158,14 @@ class Ship:
 
 class EnnemyStatic(Ship):
     color = (100,100,100)
-    min_size = 12
-    max_size = 50
+    name = "rofl"
 
 
     def __init__(self, pos):
         size = (random.randint(self.min_size, self.max_size),)*2
         life = 2*size[0]*p.IA_LIFE
         bullets = life
-        Ship.__init__(self, size, life, pos, bullets)
+        Ship.__init__(self, mesh, life, pos, bullets=100, shadow=True, img=None)
 
     def ia(self):
         pass
@@ -186,8 +186,8 @@ class EnnemySimple(Ship):
 
 
     def ia(self):
-        r = self.element.get_rect()
-        if r.colliderect(p.game.hero.element.get_rect()):
+        r = self.get_rect()
+        if r.colliderect(p.game.hero.get_rect()):
             if not p.IMMORTAL:
                 p.game.hero.life = -1
             self.life = -1
@@ -210,8 +210,8 @@ class EnnemyFollower(Ship):
         Ship.__init__(self, size, life, pos, bullets)
 
     def ia(self):
-        r = self.element.get_rect()
-        if r.colliderect(p.game.hero.element.get_rect()):
+        r = self.get_rect()
+        if r.colliderect(p.game.hero.get_rect()):
             p.game.hero.life = -1
             self.life = -1
         elif self.pos.y < 3*p.H//4:
@@ -239,11 +239,11 @@ class ContainerShip(Ship):
         Ship.__init__(self, size, life, pos, 0)
         self.can_explode = True
         self.is_friend = True
-        self.element.get_image().blit(img, (0,0))
+        self.mesh.img.blit(img, (14,5))
 
 
     def ia(self):
-        if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
+        if self.get_rect().colliderect(p.game.hero.get_rect()):
             self.container_action()
             self.life = -1
             self.can_explode = False

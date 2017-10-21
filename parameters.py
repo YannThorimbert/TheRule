@@ -3,6 +3,8 @@ from pygame.math import Vector2 as V2
 W,H = 400,600
 BACKGROUND_TEXTURE = "sand-texture.jpg"
 
+ENNEMIES_SIZES = [0.3, 0.5]
+
 #vessel colors are defined in ship.py
 
 ENGINE_FORCE = 0.3

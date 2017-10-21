@@ -65,7 +65,7 @@ def generate_debris_hit(pos, vel, generator):
                         angle_range=(angle-spread,angle+spread))
 
 def get_laser_img(g):
-    hlaser = g.hero.pos.y-g.hero.element.get_fus_size()[1]/2.
+    hlaser = g.hero.pos.y-g.hero.rect.h/2.
     laser_img = pygame.Surface((LASER_W,hlaser))
     laser_img.fill((255,255,0))
     laser_img = thorpy.graphics.get_shadow(laser_img, 1, alpha_factor=1., decay_mode="linear", color=(255,255,0), sun_angle=45.)
