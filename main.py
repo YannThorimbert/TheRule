@@ -25,13 +25,13 @@ import graphics
 
 #faire les dix niveaux
 
-##VENDREDI:
-
-#armes
-
 #scenario
 
 #equilibrage
+
+#textures sans effet au bol
+
+#boss final : hero libre
 
 
 # ##############################################################################

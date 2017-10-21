@@ -168,6 +168,7 @@ class EnnemyStatic(Ship):
 
 
 class EnnemySimple(Ship):
+    prob = 4
     color = (255,0,0)
     min_size = 12
     max_size = 50
@@ -193,6 +194,7 @@ class EnnemySimple(Ship):
             self.vel += V2(0,1)*p.ENGINE_FORCE_IA
 
 class EnnemyFollower(Ship):
+    prob = 4
     color = (255,255,0)
     min_size = 12
     max_size = 50
@@ -221,13 +223,14 @@ class EnnemyFollower(Ship):
 ##        graphics.fire_gen.generate(self.pos)
 
 
-class LifeStock(Ship):
+class ContainerShip(Ship):
+    speed = 2.
     color = (255,255,255)
-    min_size = 10
-    max_size = 50
 
-    def __init__(self, pos):
-        size = (random.randint(self.min_size,self.max_size),)*2
+    def __init__(self, pos, value):
+##        img = ship_imgs[self.name]
+##        size = img.get_size()
+        size = (30,30)
         life =  2*size[0]*p.IA_LIFE
         Ship.__init__(self, size, life, pos, 0)
         self.can_explode = True
@@ -236,31 +239,96 @@ class LifeStock(Ship):
 
     def ia(self):
         if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
-            p.game.hero.life += self.element.get_rect().w
-            p.game.hero.life = min(p.game.hero.life, 100)
+            self.container_action()
             self.life = -1
+            self.can_explode = False
         else:
-            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*2
+            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*self.speed
 
-class BulletStock(Ship):
-    color = (0,0,0)
-    min_size = 10
-    max_size = 50
+class LifeContainer(ContainerShip):
+    name = "life"
+    prob = 6
+    value = 20
+    def container_action(self):
+        p.game.hero.life += self.value
+        p.game.hero.life = min(p.game.hero.life, 100)
 
-    def __init__(self, pos):
-        size = (random.randint(self.min_size,self.max_size),)*2
-        life =  2*size[0]*p.IA_LIFE
-        Ship.__init__(self, size, life, pos, 0)
-        self.can_explode = True
-        self.is_friend = True
+class BulletContainer(ContainerShip):
+    name = "bullet"
+    prob = 6
+    value = int(0.5*p.game.hero.max_bullets)
+    def container_action(self):
+         p.game.hero.bullets += self.value
+         p.game.hero.bullets = min(p.game.hero.max_bullets, p.game.hero.bullets)
 
-    def ia(self):
-        if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
-            p.game.hero.bullets += self.element.get_rect().w*2
-            p.game.hero.bullets = min(p.game.hero.max_bullets, p.game.hero.bullets)
-            self.life = -1
-        else:
-            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*2
+class RocketContainer(ContainerShip):
+    name = "rocket"
+    prob = 4
+    speed = 1.5
+    value = p.game.hero.max_rockets
+    def container_action(self):
+         p.game.hero.rockets += self.value
+         p.game.hero.rockets = min(p.game.hero.max_rockets, p.game.hero.rockets)
+
+class LaserContainer(ContainerShip):
+    name = "laser"
+    prob = 2
+    speed = 1.2
+    value = p.game.hero.max_laser
+    def container_action(self):
+        p.game.hero.laser += self.value
+        p.game.hero.laser = min(p.game.hero.max_laser, p.game.hero.laser)
+
+class NukeContainer(ContainerShip):
+    name = "nuke"
+    prob = 1
+    speed = 0.8
+    value = p.game.hero.max_nuke
+    def container_action(self):
+        p.game.hero.nuke += self.value
+        p.game.hero.nuke = min(p.game.hero.max_nuke, p.game.hero.nuke)
+
+
+##class LifeStock(Ship):
+##    color = (255,255,255)
+##    min_size = 10
+##    max_size = 50
+##
+##    def __init__(self, pos):
+##        size = (random.randint(self.min_size,self.max_size),)*2
+##        life =  2*size[0]*p.IA_LIFE
+##        Ship.__init__(self, size, life, pos, 0)
+##        self.can_explode = True
+##        self.is_friend = True
+##
+##
+##    def ia(self):
+##        if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
+##            p.game.hero.life += self.element.get_rect().w
+##            p.game.hero.life = min(p.game.hero.life, 100)
+##            self.life = -1
+##        else:
+##            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*2
+##
+##class BulletStock(Ship):
+##    color = (0,0,0)
+##    min_size = 10
+##    max_size = 50
+##
+##    def __init__(self, pos):
+##        size = (random.randint(self.min_size,self.max_size),)*2
+##        life =  2*size[0]*p.IA_LIFE
+##        Ship.__init__(self, size, life, pos, 0)
+##        self.can_explode = True
+##        self.is_friend = True
+##
+##    def ia(self):
+##        if self.element.get_rect().colliderect(p.game.hero.element.get_rect()):
+##            p.game.hero.bullets += self.element.get_rect().w*2
+##            p.game.hero.bullets = min(p.game.hero.max_bullets, p.game.hero.bullets)
+##            self.life = -1
+##        else:
+##            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*2
 
 class Rail(Ship):
     color = (50,50,50)
@@ -292,8 +360,11 @@ class Hero(Ship):
     def __init__(self, size, life, pos, bullets=100, shadow=True, img=None):
         Ship.__init__(self, size, life, pos, bullets, shadow, img)
         self.rockets = 100
-##        self.max_rockets = self.rockets
+        self.max_rockets = 100
         self.laser = 100
+        self.max_laser = 100
+        self.nuke = 100
+        self.max_nuke = 100
 
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
@@ -326,4 +397,9 @@ class Hero(Ship):
             p.game.laser = p.LASER_TIME
             self.laser -= 1
 
-coming = [EnnemySimple,EnnemyFollower]*3+ [LifeStock, BulletStock]
+coming_ennemies = []
+for ennemy in EnnemyFollower, EnnemySimple:
+    coming_ennemies += [ennemy]*ennemy.prob
+coming_friends = []
+for friend in LifeContainer, BulletContainer, RocketContainer, LaserContainer, NukeContainer:
+    coming_friends += [frined]*friend.prob

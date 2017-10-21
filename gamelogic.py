@@ -3,7 +3,7 @@ from collections import deque
 import pygame
 from pygame.math import Vector2 as V2
 import thorpy
-from ship import coming, Rail
+from ship import Rail, coming_ennemies, coming_friends
 from hud import HUD
 from parameters import W, H, ENGINE_FORCE, MOD_BULLET, BULLET_SPEED, ROCKET_SPEED, MOD_ROCKET
 import parameters as p
@@ -67,7 +67,12 @@ class Game:
         self.events = [self.hero_dead]
         self.hud = HUD()
         self.score = 0
-        self.ennemy_flux = 50
+        #
+        self.ship_flux = 50
+        self.ship_prob = 0.5
+        self.ennemy_prob = 0.8
+        #
+        self.ennemy_prob
         self.damage_rail_m = -1
         self.damage_rail_M = W + 1
         self.tot_time = 5000
@@ -76,8 +81,9 @@ class Game:
         self.hints_ids = set([])
         self.laser = 0
         hlaser = self.hero.pos.y-self.hero.element.get_fus_size()[1]/2.
-        self.laser_img = pygame.Surface((p.LASER_W,hlaser))
-        self.laser_img.fill((255,255,0))
+##        self.laser_img = pygame.Surface((p.LASER_W,hlaser))
+##        self.laser_img.fill((255,255,0))
+        self.laser_img = g.get_laser_img(self)
         self.laser_rect = self.laser_img.get_rect()
         #
         self.a_imgs = {}
@@ -119,9 +125,12 @@ class Game:
             self.hero.shoot_laser()
 
     def add_random_ship(self):
-        if self.i % self.ennemy_flux == 0:
-            if random.random() < 0.5:
-                Coming = random.choice(coming)
+        if self.i % self.ship_flux == 0:
+            if random.random() < self.ship_prob:
+                if random.random() < self.ennemy_prob:
+                    Coming = random.choice(coming_ennemies)
+                else:
+                    Coming = random.choice(coming_friends)
                 ship = Coming(pos=(random.randint(20,W-20),0))
                 self.add_ship(ship)
                 if not ship.is_friend:
