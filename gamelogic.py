@@ -27,14 +27,6 @@ class GameEvent:
             self.reaction()
 
 
-def get_imgs_alert(text, color=(255,0,0), size1=20, size2=40):
-    imgs = []
-    element = thorpy.make_text(text, size1, color)
-    for s in range(size1, size2):
-        element.set_font_size(s)
-        imgs.append(element.get_image())
-    return imgs
-
 class GameAlert:
 
     def __init__(self, imgs, duration, pos):
@@ -89,9 +81,9 @@ class Game:
         self.laser_rect = self.laser_img.get_rect()
         #
         self.a_imgs = {}
-        self.a_imgs["nice"] = get_imgs_alert("Right kill !", (200,255,0))
-        self.a_imgs["bad"] = get_imgs_alert("Bad kill", (155,0,0), 20, 30)
-        self.a_imgs["dead"] = get_imgs_alert("You are dead", (155,0,0), 40, 60)
+        self.a_imgs["nice"] = g.get_imgs_alert("Right kill !", (200,255,0))
+        self.a_imgs["bad"] = g.get_imgs_alert("Bad kill", (155,0,0), 20, 30)
+        self.a_imgs["dead"] = g.get_imgs_alert("You are dead", (155,0,0), 40, 60)
         self.alerts = []
         #
 ##        self.sound_collection = thorpy.SoundCollection()

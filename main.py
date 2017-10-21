@@ -9,18 +9,18 @@ from graphics import debris_hero, fire_gen, smoke_gen, bullet_img
 import graphics
 
 
-#shooter avec contraintes
-    #cumulatives : couleur - forme - texture - bullets
+#regles simples : forme et couleur
+    # imgs vaisseaux precomputed, sizes limitees
     #doit se tuer lui meme a la fin gnahahah
 
-#on doit deduire l'identite des Autres au fil des parties
 
+#nuke
 #recharges laser et rockets et tout, pas forcement en debut de partie!
 ##logos croix rouge etc
+#method at_dead
 
-##JEUDI:
 #options : smoke
-
+#options : sons
 #sons!
 
 #faire les dix niveaux

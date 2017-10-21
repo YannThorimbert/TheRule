@@ -1,6 +1,7 @@
 import random
 import pygame
 import thorpy
+##from thorpy._utils.colorscomputing import linear_combination_rgba
 import ship
 from parameters import *
 
@@ -15,6 +16,24 @@ all_explosions = []
 explosions = [[],[],[]]
 expl_sizes = [(60,60), (80,80), (120,120)]
 current_explosion = [0,0,0]
+
+def get_imgs_alert(text, color=(255,0,0), size1=20, size2=40,
+                    alpha_start=255, alpha_end=50):
+    imgs = []
+    element = thorpy.make_text(text, size1, color)
+    delta_alpha = 255 - alpha_end
+    step_alpha = delta_alpha // (size2 - size1)
+    alpha = alpha_start
+    for s in range(size1, size2):
+        element.set_font_size(s)
+        alpha -= step_alpha
+##        element.set_font_color(color+(alpha,))
+        img = element.get_image()
+        img.convert()
+        img.set_alpha(alpha)
+        imgs.append(img)
+    return imgs
+
 
 
 def generate_debris_explosion(pos, generator):
