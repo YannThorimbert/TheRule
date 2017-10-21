@@ -4,6 +4,7 @@ import thorpy
 import ship
 from parameters import *
 
+container_imgs = {}
 bullet_img = None
 rocket_img = None
 laser_gen = None
@@ -42,10 +43,6 @@ def get_imgs_alert(text, color=(255,0,0), size1=20, size2=40):
 ##        imgs.append(img)
 ##    return imgs
 
-def get_container_img(fn):
-    img = thorpy.load_image(fn, (255,255,255))
-    img = pygame.transform.smoothscale(img, CONTAINER_SIZE)
-    return img
 
 
 
@@ -76,7 +73,7 @@ def get_laser_img(g):
 
 
 def initialize():
-    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen
+    global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen, container_imgs
     bullet_img = thorpy.graphics.get_aa_ellipsis((BULLET_SIZE,BULLET_SIZE),
                                                     BULLET_COLOR)
     bullet_img = thorpy.graphics.get_shadow(bullet_img, color=(255,155,0))
@@ -100,7 +97,6 @@ def initialize():
                                                 color=ship.EnnemyFollower.color,
                                                 max_size=8)
     all_debris = [debris_hero, ship.EnnemySimple.debris, ship.EnnemyFollower.debris]
-    print(ship.EnnemySimple.debris, ship.EnnemyFollower.debris)
     for size in range(3):
         for i in range(10):
             e = thorpy.AnimatedGif.make(random.choice(["explosion-illugion.gif",
@@ -111,9 +107,17 @@ def initialize():
             e.low = 6
             explosions[size].append(e)
             all_explosions.append(e)
+    for name in "life", "bullet", "rocket", "nuke", "bullet", "laser":
+        img = thorpy.load_image(name+".png", (255,255,255))
+        img = pygame.transform.smoothscale(img, CONTAINER_SIZE)
+        container_imgs[name] = img
 
-def add_explosion(ship):
-    M = max(ship.size)
+def add_explosion(ship=None, size=None, pos=None):
+    if not size:
+        size = ship.size
+    if not pos:
+        pos = ship.pos
+    M = max(size)
     if M < 20:
         size = 0
     elif M < 30:
@@ -123,7 +127,7 @@ def add_explosion(ship):
     expl = explosions[size][current_explosion[size]]
     expl.set_visible(True)
     expl.nread = 1
-    expl.set_center(ship.element.get_fus_center())
+    expl.set_center(pos)
 ##    expl.move((0,-expl_sizes[size][1]//3))
     current_explosion[size] += 1
     current_explosion[size] %= len(explosions[size])

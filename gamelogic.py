@@ -70,7 +70,7 @@ class Game:
         #
         self.ship_flux = 50
         self.ship_prob = 0.5
-        self.ennemy_prob = 0.8
+        self.ennemy_prob = 0.
         #
         self.ennemy_prob
         self.damage_rail_m = -1
@@ -90,12 +90,13 @@ class Game:
         self.a_imgs["nice"] = g.get_imgs_alert("Right kill !", (200,255,0))
         self.a_imgs["bad"] = g.get_imgs_alert("Bad kill", (155,0,0), 20, 30)
         self.a_imgs["dead"] = g.get_imgs_alert("You are dead", (155,0,0), 40, 60)
+        self.a_imgs["nuke"] = g.get_imgs_alert("Nuke!!!", size1=60, size2=90)
         self.alerts = []
         #
 ##        self.sound_collection = thorpy.SoundCollection()
 ##        self.sounds.add("explosion1.ogv", "explosion1")
 
-    def add_alert(self, a, duration=100, pos=None):
+    def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
 
     def add_hint(self, h):
@@ -111,10 +112,10 @@ class Game:
         elif pp[pygame.K_RIGHT]:
             self.laser_rect.centerx = self.hero.pos.x
             move_hero_right()
-##        elif pp[pygame.K_UP]:
-##            move_hero_up()
-##        elif pp[pygame.K_DOWN]:
-##            move_hero_down()
+        elif pp[pygame.K_UP]:
+            move_hero_up()
+        elif pp[pygame.K_DOWN]:
+            move_hero_down()
         if pp[pygame.K_SPACE]:
             if self.i%MOD_BULLET == 0:
                 self.hero.shoot((0,-BULLET_SPEED))
@@ -123,6 +124,8 @@ class Game:
                 self.hero.shoot_rocket((0,-ROCKET_SPEED))
         elif pp[pygame.K_LSHIFT]:
             self.hero.shoot_laser()
+        elif pp[pygame.K_RETURN]:
+            self.hero.shoot_nuke()
 
     def add_random_ship(self):
         if self.i % self.ship_flux == 0:
@@ -241,9 +244,9 @@ def move_hero_left():
 def move_hero_right():
     p.game.hero.vel[0] += ENGINE_FORCE
 def move_hero_up():
-    p.game.hero.vel[1] -= ENGINE_FORCE
+    p.game.hero.vel[1] -= ENGINE_FORCE*p.game.hero.vertical_vel
 def move_hero_down():
-    p.game.hero.vel[1] += ENGINE_FORCE
+    p.game.hero.vel[1] += ENGINE_FORCE*p.game.hero.vertical_vel
 
 ##a->b: 10.988798017052154
 ##b->c: 0.25446000916870104

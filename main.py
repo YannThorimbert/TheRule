@@ -14,18 +14,14 @@ import graphics
     #doit se tuer lui meme a la fin gnahahah
 
 
-#nuke
-#recharges laser et rockets et tout, pas forcement en debut de partie!
-##logos croix rouge etc
-#method at_dead
-
 #options : smoke
 #options : sons
-#sons!
 
 #faire les dix niveaux
 
 #scenario
+
+#si nuke explose,explose vraiment
 
 #equilibrage
 
@@ -33,6 +29,7 @@ import graphics
 
 #boss final : hero libre
 
+#sons!
 
 # ##############################################################################
 

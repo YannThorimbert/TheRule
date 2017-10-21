@@ -38,15 +38,18 @@ class HUD:
         #
         self.rockets = thorpy.make_text("Rockets: 0")
         self.laser = thorpy.make_text("Laser: 0")
+        self.nuke = thorpy.make_text("Nuke: 0")
         #
         self.bullets = thorpy.LifeBar.make("Bullets", size=(150,20))
         self.bullets.stick_to("screen", "right", "right")
         self.bullets.stick_to("screen", "bottom", "bottom", False)
-        self.bullets.move((-2,-5 - self.laser.get_fus_size()[1] - self.rockets.get_fus_size()[1]))
+        h = self.laser.get_fus_size()[1] + self.rockets.get_fus_size()[1] + self.nuke.get_fus_size()[1]
+        self.bullets.move((-2,-5 -h))
         #
         self.rockets.stick_to(self.bullets, "bottom", "top")
         self.rockets.move((0,2))
         self.laser.stick_to(self.rockets, "bottom", "top")
+        self.nuke.stick_to(self.laser, "bottom", "top")
 ##        self.rockets.move((0,2))
 
 
@@ -59,7 +62,14 @@ class HUD:
         self.bullets.blit()
         self.rockets.set_text("Rockets: "+str(hero.rockets))
         self.rockets.blit()
+        newlaser = "Laser: "+str(hero.laser)
+        if self.laser.get_text() != newlaser:
+            self.laser.set_text(newlaser)
+        newnuke = "Nuke: "+str(hero.nuke)
+        if self.nuke.get_text() != newnuke:
+            self.nuke.set_text(newnuke)
         self.laser.blit()
+        self.nuke.blit()
         self.score.blit()
         self.time.set_life(parameters.game.remaining_time)
         self.time.blit()
