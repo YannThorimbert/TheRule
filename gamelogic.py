@@ -3,7 +3,7 @@ from collections import deque
 import pygame
 from pygame.math import Vector2 as V2
 import thorpy
-from ship import Rail, coming_ennemies, coming_friends
+import ship as shipm
 from hud import HUD
 from parameters import W, H, ENGINE_FORCE, MOD_BULLET, BULLET_SPEED, ROCKET_SPEED, MOD_ROCKET
 import parameters as p
@@ -59,7 +59,7 @@ class Game:
         self.bullets = deque()
         self.rockets = deque()
         self.hero = hero
-        self.rail = Rail(self.hero)
+        self.rail = shipm.Rail(self.hero)
         self.add_ship(self.rail)
         self.add_ship(hero)
         self.i = 0
@@ -70,7 +70,7 @@ class Game:
         #
         self.ship_flux = 50
         self.ship_prob = 0.5
-        self.ennemy_prob = 0.
+        self.ennemy_prob = 0.5
         #
         self.ennemy_prob
         self.damage_rail_m = -1
@@ -91,6 +91,7 @@ class Game:
         self.a_imgs["bad"] = g.get_imgs_alert("Bad kill", (155,0,0), 20, 30)
         self.a_imgs["dead"] = g.get_imgs_alert("You are dead", (155,0,0), 40, 60)
         self.a_imgs["nuke"] = g.get_imgs_alert("Nuke!!!", size1=60, size2=90)
+        self.a_imgs["item"] = g.get_imgs_alert("Got item")
         self.alerts = []
         #
 ##        self.sound_collection = thorpy.SoundCollection()
@@ -131,12 +132,15 @@ class Game:
         if self.i % self.ship_flux == 0:
             if random.random() < self.ship_prob:
                 if random.random() < self.ennemy_prob:
-                    Coming = random.choice(coming_ennemies)
-                    mesh = ...
+                    Coming = random.choice(shipm.coming_ennemies)
+                    factor = random.choice(p.ENNEMIES_SIZES)
+                    type_ = random.choice(shipm.ennemies_fn)
+                    mesh = shipm.ennemies_meshes[(type_, factor)]
                 else:
-                    Coming = random.choice(coming_friends)
-                    mesh = ...
+                    Coming = random.choice(shipm.coming_friends)
+                    mesh = shipm.container_mesh
                 randpos = (random.randint(20,W-20),0)
+                print(Coming)
                 ship = Coming(mesh, randpos)
                 self.add_ship(ship)
 
@@ -154,6 +158,7 @@ class Game:
             e.refresh()
         self.add_random_ship()
         self.process_key_pressed()
+        #refresh ships logics
         for ship in self.ships:
             ship.ia()
             ship.refresh()
@@ -187,6 +192,7 @@ class Game:
             g.smoke_gen.draw(self.screen)
             g.fire_gen.draw(self.screen)
         mon.append("h")
+        # draw weapons
         for bullet in self.bullets:
             bullet.draw()
         for rocket in self.rockets:
@@ -195,6 +201,7 @@ class Game:
             self.laser -= 1
             self.draw_laser()
         mon.append("i")
+        #draw debris
         for d in g.all_debris:
             d.draw(self.screen)
         mon.append("j")

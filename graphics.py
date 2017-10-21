@@ -91,11 +91,15 @@ def initialize():
                                                      max_size=8)
     ship.Hero.debris = debris_hero
     ship.EnnemySimple.debris = thorpy.fx.get_debris_generator(duration=50,
-                                                color=ship.EnnemySimple.color,
+                                                color=(100,100,100),
                                                 max_size=8)
     ship.EnnemyFollower.debris = thorpy.fx.get_debris_generator(duration=50,
-                                                color=ship.EnnemyFollower.color,
+                                                color=(220,220,220),
                                                 max_size=8)
+##    ship.ContainerShip.debris = thorpy.fx.get_debris_generator(duration=50,
+##                                                color=(220,220,220),
+##                                                max_size=8)
+    ship.ContainerShip.debris = ship.EnnemyFollower.debris
     all_debris = [debris_hero, ship.EnnemySimple.debris, ship.EnnemyFollower.debris]
     for size in range(3):
         for i in range(10):
@@ -114,7 +118,7 @@ def initialize():
 
 def add_explosion(ship=None, size=None, pos=None):
     if not size:
-        size = ship.size
+        size = ship.rect.size
     if not pos:
         pos = ship.pos
     M = max(size)

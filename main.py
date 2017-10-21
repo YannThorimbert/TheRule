@@ -6,40 +6,48 @@ from ship import Hero
 import parameters as p
 from gamelogic import *
 from graphics import debris_hero, fire_gen, smoke_gen, bullet_img
-import graphics
+import graphics, ship
 
 
 #regles simples : forme et couleur
     # imgs vaisseaux precomputed, sizes limitees
     #doit se tuer lui meme a la fin gnahahah
 
+#debris de la bonne couleur, n'est plus un attribut de classe mais de ship
 
 #options : smoke
 #options : sons
+#options : debris
 
 #faire les dix niveaux
 
 #scenario
 
-
-#textures sans effet au bol
+#textures sans effet, au bol
 
 #boss final : hero libre
 
 #sons!
 #equilibrage
 
+#les nuke explodent quand ont les prend
+
+#remettre ombres
+
+#enlever monitoring
+
 # ##############################################################################
 
 app = thorpy.Application((W,H), "The Rule")
 
 graphics.initialize()
+ship.initialize_meshes()
 
 
 e_background = thorpy.Background.make(image=p.BACKGROUND_TEXTURE,
                                         elements=graphics.all_explosions)
 ##e_background = thorpy.Background.make((255,255,255))
-hero = Hero(size=(20,20), life=100, pos=(p.W//2,p.H-100), bullets=300)
+hero = Hero(pos=(p.W//2,p.H-100), bullets=300)
 game = Game(e_background, hero)
 
 p.game = game
