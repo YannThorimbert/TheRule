@@ -5,58 +5,124 @@ import thorpy
 import parameters as p
 import graphics
 from bullet import Bullet, Rocket
+from thorpy._utils.colorscomputing import normalize_color
 
 ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,6)]
 container_fn = "xevin1.png"
-hero_fn = "pitrizzo1.png"
+hero_fn = "xevin2.png"
 ennemies_meshes = {}
 container_mesh = None
 hero_mesh = None
+
+fn_colors = {}
+fn_debris = {}
+fn_shape = {}
+
 
 class Mesh:
 
     def __init__(self, img):
         self.img = img
         self.size = self.img.get_size()
+        self.color = None
+        self.debris = None
 
 
 class ShipMesh:
 
-    def __init__(self, fn, factor, rotate=True, colorkey=(0,0,0)):
+    def __init__(self, fn, factor, rotate=True, colorkey=(255,255,255)):
         self.fn = fn
         self.img = thorpy.load_image(fn)
         if rotate:
             self.img = pygame.transform.rotate(self.img, 180)
         w,h = self.img.get_size()
         size = int(factor*w), int(factor*h)
-        self.img = pygame.transform.smoothscale(self.img, size)
-        self.img.set_colorkey(colorkey)
+        self.img = pygame.transform.scale(self.img, size)
+        if colorkey:
+            self.img.set_colorkey(colorkey)
         self.img.convert()
         self.size = self.img.get_size()
-        self.collisions = [[False for x in range(w)] for y in range(h)]
+        self.collisions = [[False for y in range(h)] for x in range(w)]
+        self.color = None
         self.build_collision_matrix()
+        if thorpy.constants.CAN_SHADOWS:
+            self.shadow = thorpy.graphics.get_shadow(self.img, alpha_factor=0.5)
+            self.shadow = pygame.transform.rotate(self.shadow, 180)
 
-    def built_co
+    def build_collision_matrix(self):
+        global fn_colors, fn_debris
+        colors = self.fn in fn_colors
+        do_colors = not(colors)
+        w,h = self.img.get_size()
+        ck = self.img.get_colorkey()
+        r,g,b,n = 0,0,0,0
+        for x in range(w):
+            for y in range(h):
+                col = self.img.get_at((x,y))
+                if col != ck:
+                    self.collisions[x][y] = True
+                    if do_colors:
+                        r += col[0]
+                        g += col[1]
+                        b += col[2]
+                        n += 1
+        if do_colors:
+            self.color = (r//n + 20, g//n + 20, b//n + 20)
+            self.color = normalize_color(self.color)
+            self.debris = thorpy.fx.get_debris_generator(duration=50,
+                                                color=self.color,
+                                                max_size=8)
+            fn_colors[self.fn] = self.color
+            fn_debris[self.fn] = self.debris
+        else:
+            self.color = fn_colors[self.fn]
+            self.debris = fn_debris[self.fn]
 
-def initialize_meshes():
-    global ennemies_meshes, container_mesh, hero_mesh
-    for e in ennemies_fn:
+def build_shape(fn):
+    if "xevin" in fn:
+        factor = 0.2
+    else:
+        factor = 0.1
+    mesh = ShipMesh(fn, factor)
+    w,h = mesh.img.get_size()
+    for x in range(w):
+        for y in range(h):
+            if mesh.collisions[x][y]:
+                mesh.img.set_at((x,y), (0,0,0))
+            else:
+                mesh.img.set_at((x,y), (255,255,255))
+    return mesh.img
+
+def initialize_meshes(loadbar):
+    global ennemies_meshes, container_mesh, hero_mesh, fn_shape
+    loadbar.set_text("Building per-pixel collision matrices...")
+    loadbar.set_life(0.4)
+    loadbar.unblit_and_reblit()
+    L = len(ennemies_fn)
+    for i,e in enumerate(ennemies_fn):
+        loadbar.set_life(0.5+float(i)/L*0.5)
+        loadbar.unblit_and_reblit()
         for factor in p.ENNEMIES_SIZES:
             ennemies_meshes[(e,factor)] = ShipMesh(e, factor)
     container_mesh = ShipMesh(container_fn,1.)
-    hero_mesh = ShipMesh(hero_fn,0.5,rotate=False,colorkey=(255,255,255))
+    hero_mesh = ShipMesh(hero_fn,1.,rotate=False)
+    loadbar.set_text("Building shadows...")
+    loadbar.set_life(0.95)
+    loadbar.unblit_and_reblit()
+    for fn in fn_colors:
+        fn_shape[fn] = build_shape(fn)
+
 
 
 class Ship:
     meshname = "noname"
     id = 0
-    debris = None
 
     def __init__(self, mesh, pos, bullets=100, shadow=True):
         self.mesh = mesh
         self.img = self.mesh.img #copy?
         self.rect = self.img.get_rect()
-        self.life = self.rect.w + self.rect.h
+        self.life = (self.rect.w + self.rect.h)*p.IA_LIFE
         self.max_life = self.life
         self.pos = V2(pos)
         self.rect.center = self.pos
@@ -64,19 +130,29 @@ class Ship:
         self.bullets = bullets
         self.max_bullets = bullets
         self.can_explode = True
-        self.can_debris = True
+        self.debris = mesh.debris
         self.hints_ids = set([])
         self.id = Ship.id
         Ship.id += 1
-##        if shadow and thorpy.constants.CAN_SHADOWS: #set shadow
-##            thorpy.makeup.add_static_shadow(self.element,
-##                                            {"target_altitude":5,
-##                                                "shadow_radius":3,
-##                                                "sun_angle":40,
-##                                                "alpha_factor":0.6})
+        if shadow and thorpy.constants.CAN_SHADOWS and p.USING_SHADOWS: #set shadow
+            self.shadow = self.mesh.shadow
+        else:
+            self.shadow = None
 ##        self.smoking = False
 ##        self.original_img = self.element.get_image()
         self.is_friend = False
+
+    def collide(self, pos):
+        dx = pos[0] - self.rect.x
+        dy = pos[1] - self.rect.y
+        dx = int(dx)
+        dy = int(dy)
+        if 0 <= dx < self.rect.w:
+            if 0 <= dy < self.rect.h:
+                return self.mesh.collisions[dx][dy]
+        return False
+
+
 
     def at_explode(self):
         pass
@@ -85,28 +161,19 @@ class Ship:
         for bullet in p.game.bullets:
             if bullet.from_id != self.id:
                 if bullet.visible:
-                    r = self.rect
-##                    if bullet.pos.distance_to(r.center) < r.w:
-                    if r.collidepoint(bullet.pos):
+                    if self.collide(bullet.pos):
                         bullet.visible = False
                         self.life -= 1
-##                        print("he")
                         if self.debris:
-##                            print(" ho")
                             graphics.generate_debris_hit(V2(bullet.pos+(0,-10)),
                                                 V2(bullet.v),
                                                 self.debris)
-##                        if self.life < self.max_life/2.:
-##                            self.smoking = True
-##                        else:
-##                            self.smoking = False
 
     def process_rockets(self):
         for rocket in p.game.rockets:
             if self.id > 1:
                 if rocket.visible:
-                    r = self.rect
-                    if rocket.pos.distance_to(r.center) < r.w:
+                    if self.collide(rocket.pos):
                         rocket.visible = False
                         self.life = -1
                         if self.debris:
@@ -135,6 +202,9 @@ class Ship:
         elif self.pos.x < 0 and self.vel.x < 0: #bounce on the left
             self.vel *= -1
 
+    def collide_hero(self):
+        return self.rect.colliderect(p.game.hero.rect)
+
     def refresh(self):
         self.process_physics()
         self.move(self.vel)
@@ -147,9 +217,9 @@ class Ship:
                 p.game.hero_dead.activate()
                 p.game.add_alert("dead",duration=400,pos=(p.W/2,p.H/2))
             elif self.is_friend:
-                if self.rect.colliderect(p.game.hero.rect):
+                if self.collide_hero():
                     self.can_explode = False
-                    self.can_debris = False
+                    self.debris = None
                     p.game.add_alert("item",pos=self.pos)
                 else:
                     p.game.add_alert("bad",pos=self.pos)
@@ -158,11 +228,10 @@ class Ship:
                     p.game.add_alert("nice",pos=self.pos)
                     p.game.score += 1
             if self.debris:
-                if self.can_debris:
-                    graphics.generate_debris_explosion(V2(self.pos), self.debris)
+                graphics.generate_debris_explosion(V2(self.pos), self.debris)
             if self.can_explode:
                 graphics.add_explosion(self)
-            self.at_explode()
+                self.at_explode()
 
     def move(self, delta):
         self.pos += delta
@@ -197,8 +266,7 @@ class EnnemySimple(Ship):
     def ia(self):
         r = self.rect
         if r.colliderect(p.game.hero.rect):
-            if not p.IMMORTAL:
-                p.game.hero.life = -1
+            p.game.hero.life = -1
             self.life = -1
         elif r.bottom > p.game.hero.pos.y:
             p.game.add_rail_damage(r)
@@ -241,11 +309,11 @@ class ContainerShip(Ship):
         self.can_explode = True
         self.is_friend = True
         self.img = self.img.copy()
-        self.img.blit(img, (15,5))
+        self.img.blit(img, (16,6))
 
 
     def ia(self):
-        if self.rect.colliderect(p.game.hero.rect):
+        if self.collide_hero():
             self.container_action()
             self.life = -1
             self.can_explode = False
@@ -288,7 +356,7 @@ class LaserContainer(ContainerShip):
 
 class NukeContainer(ContainerShip):
     name = "nuke"
-    prob = 10
+    prob = 100
     speed = 0.8
     value = p.MAX_NUKE_NUMBER
     def container_action(self):
@@ -304,7 +372,7 @@ class Rail(Ship):
 
     def __init__(self, hero):
         W,H = thorpy.functions.get_screen_size()
-        tile = thorpy.load_image("rail.png")
+        tile = thorpy.load_image("rail.png", colorkey=(255,255,255))
         w,h = tile.get_size()
         size = (W,h)
         pos = (W//2, hero.pos.y)
@@ -314,6 +382,7 @@ class Rail(Ship):
             img.blit(tile, (x,0))
             x += tile.get_width()
         Ship.__init__(self, Mesh(img), pos, 0, shadow=False)
+        self.img.set_colorkey((0,0,0))
         self.can_explode = False
         life = 100000 #osef
 
@@ -323,12 +392,16 @@ class Rail(Ship):
     def process_bullets(self):
         pass
 
+    def collide(self, pos):
+        return False
+
 class Hero(Ship):
     color = (0,0,255)
 
     def __init__(self, pos, bullets=100, shadow=True):
         Ship.__init__(self, hero_mesh, pos, bullets, shadow)
         self.life = 100
+        self.max_life = 100
         self.rockets = p.MAX_ROCKET_NUMBER
         self.laser = p.MAX_LASER_NUMBER
         self.nuke = p.MAX_NUKE_NUMBER
@@ -374,7 +447,7 @@ def nuke_explosion():
     for ship in p.game.ships[2:]:
         ship.life = -1
         for i in range(10):
-            x,y = random.randint(0,graphics.W), random.randint(0,graphics.H)
+            x,y = random.randint(0,graphics.W), random.randint(100,graphics.H-200)
             graphics.add_explosion(size=(100,100), pos=(x,y))
         p.game.add_alert("nuke", pos=(graphics.W/2,graphics.H/2))
 

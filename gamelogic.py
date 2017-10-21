@@ -91,11 +91,14 @@ class Game:
         self.a_imgs["bad"] = g.get_imgs_alert("Bad kill", (155,0,0), 20, 30)
         self.a_imgs["dead"] = g.get_imgs_alert("You are dead", (155,0,0), 40, 60)
         self.a_imgs["nuke"] = g.get_imgs_alert("Nuke!!!", size1=60, size2=90)
-        self.a_imgs["item"] = g.get_imgs_alert("Got item")
+        self.a_imgs["item"] = g.get_imgs_alert("Got item", size1=20, size2=30)
         self.alerts = []
         #
 ##        self.sound_collection = thorpy.SoundCollection()
 ##        self.sounds.add("explosion1.ogv", "explosion1")
+        #
+        self.e_pause = thorpy.make_text("Pause - press a key to continue", 20, (255,255,0))
+        self.e_pause.center(element=self.e_background)
 
     def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
@@ -117,6 +120,7 @@ class Game:
             move_hero_up()
         elif pp[pygame.K_DOWN]:
             move_hero_down()
+        #
         if pp[pygame.K_SPACE]:
             if self.i%MOD_BULLET == 0:
                 self.hero.shoot((0,-BULLET_SPEED))
@@ -127,6 +131,11 @@ class Game:
             self.hero.shoot_laser()
         elif pp[pygame.K_RETURN]:
             self.hero.shoot_nuke()
+        elif pp[pygame.K_p]:
+            print("pause")
+            self.e_pause.blit()
+            pygame.display.flip()
+            thorpy.get_application().pause()
 
     def add_random_ship(self):
         if self.i % self.ship_flux == 0:
@@ -157,6 +166,10 @@ class Game:
         for e in self.events:
             e.refresh()
         self.add_random_ship()
+        pos = pygame.mouse.get_pos()
+##        for ship in self.ships:
+##            if ship.collide(pos):
+##                print(ship, self.i)
         self.process_key_pressed()
         #refresh ships logics
         for ship in self.ships:
@@ -179,13 +192,15 @@ class Game:
             g.fire_gen.update_physics(V2())
         mon.append("e")
         # process debris
-        for d in g.all_debris:
+        for d in shipm.fn_debris.values():
             d.kill_old_elements(self.screen.get_rect())
             d.update_physics(dt=0.1)
         mon.append("f")
         # refresh screen
         self.e_background.blit()
         for s in self.ships:
+            if s.shadow:
+                self.screen.blit(s.shadow, V2(s.rect.topleft)+p.SHADOW_POS)
             self.screen.blit(s.img, s.rect)
         mon.append("g")
         if p.NSMOKE > 1:
@@ -202,7 +217,7 @@ class Game:
             self.draw_laser()
         mon.append("i")
         #draw debris
-        for d in g.all_debris:
+        for d in shipm.fn_debris.values():
             d.draw(self.screen)
         mon.append("j")
         self.hud.refresh_and_draw()

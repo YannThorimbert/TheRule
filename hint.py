@@ -9,7 +9,11 @@ class Hint:
         self.id = Hint.id
         Hint.id += 1
         self.name = name
-        self.img = img
+        if isinstance(img, tuple):
+            self.img = pygame.Surface((20,20))
+            self.img.fill(img)
+        else:
+            self.img = img
 
     def paint(self, surf):
         raise Exception("Not implemented")

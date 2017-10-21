@@ -1,10 +1,10 @@
 from pygame.math import Vector2 as V2
 
 W,H = 400,600
-BACKGROUND_TEXTURE = "sand-texture.jpg"
+BACKGROUND_TEXTURES = "sand-texture.jpg",# "rock.png", "Calinou1.png", "Calinou2.png", "Calinou3.png"
 
 ##ENNEMIES_SIZES = [0.3, 0.5]
-ENNEMIES_SIZES = [0.5]
+ENNEMIES_SIZES = [0.2]
 
 #vessel colors are defined in ship.py
 
@@ -24,7 +24,7 @@ ROCKET_SIZE_ON_2 = V2(ROCKET_SIZE, ROCKET_SIZE)/2
 
 BULLET_SPEED = 12
 BULLET_SIZE = 7
-BULLET_COLOR = (255,200,0)
+BULLET_COLOR = (155,100,0)
 MOD_BULLET = 4
 BULLET_SIZE_ON_2 = V2(BULLET_SIZE, BULLET_SIZE)/2
 
@@ -36,7 +36,10 @@ MAX_NUKE_NUMBER = 100
 
 CONTAINER_SIZE = (20,20)
 
+USING_SHADOWS = True
+
+SHADOW_POS = (10,12)
+
 NSMOKE = 60 #1 = deactivate
-IMMORTAL = False
 
 game = None

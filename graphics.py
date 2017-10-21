@@ -74,34 +74,33 @@ def get_laser_img(g):
 
 def initialize():
     global bullet_img, smoke_gen, fire_gen, debris_hero, all_debris, rocket_img, laser_gen, container_imgs
+    thorpy.get_screen().blit(thorpy.load_image("Calinou3.png"), (0,0))
+    title = thorpy.make_text("The Rule", 50, (230,230,255))
+    title.center(axis=(True,False))
+    title.move((0, 50))
+    title.blit()
+    loadbar = thorpy.LifeBar.make("Building smoke generators...", size=(int(0.9*W),30), font_size=10)
+    loadbar.center()
+    loadbar.set_life(0.)
+    pygame.display.flip()
     bullet_img = thorpy.graphics.get_aa_ellipsis((BULLET_SIZE,BULLET_SIZE),
                                                     BULLET_COLOR)
     bullet_img = thorpy.graphics.get_shadow(bullet_img, color=(255,155,0))
     #
-    rocket_img = thorpy.graphics.get_aa_ellipsis((ROCKET_SIZE,ROCKET_SIZE),
-                                                    ROCKET_COLOR)
+##    rocket_img = thorpy.graphics.get_aa_ellipsis((ROCKET_SIZE,ROCKET_SIZE),
+##                                                    ROCKET_COLOR)
+    rocket_img = thorpy.load_image("rocket.png", (255,255,255))
+    rocket_img = pygame.transform.scale(rocket_img, (ROCKET_SIZE,ROCKET_SIZE))
     rocket_img = thorpy.graphics.get_shadow(rocket_img, color=(255,155,0))
     #
     smoke_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(20,20,20), grow=0.6)
     fire_gen = thorpy.fx.get_smokegen(n=NSMOKE, color=(100,100,100), grow=0.4)
-##    fire_gen = thorpy.fx.get_fire_smokegen(n=NSMOKE, color=(200,255,155),
-##                                            grow=0.4, size0=(7,7))
-    debris_hero = thorpy.fx.get_debris_generator(duration=50,
-                                                     color=ship.Hero.color,
-                                                     max_size=8)
-    ship.Hero.debris = debris_hero
-    ship.EnnemySimple.debris = thorpy.fx.get_debris_generator(duration=50,
-                                                color=(100,100,100),
-                                                max_size=8)
-    ship.EnnemyFollower.debris = thorpy.fx.get_debris_generator(duration=50,
-                                                color=(220,220,220),
-                                                max_size=8)
-##    ship.ContainerShip.debris = thorpy.fx.get_debris_generator(duration=50,
-##                                                color=(220,220,220),
-##                                                max_size=8)
-    ship.ContainerShip.debris = ship.EnnemyFollower.debris
-    all_debris = [debris_hero, ship.EnnemySimple.debris, ship.EnnemyFollower.debris]
+    loadbar.set_text("Building explosions gifs...")
+    loadbar.set_life(0.1)
+    loadbar.unblit_and_reblit()
     for size in range(3):
+        loadbar.set_life(0.1+size/3.*0.4)
+        loadbar.unblit_and_reblit()
         for i in range(10):
             e = thorpy.AnimatedGif.make(random.choice(["explosion-illugion.gif",
                                                         "explosion.gif"]))
@@ -112,9 +111,11 @@ def initialize():
             explosions[size].append(e)
             all_explosions.append(e)
     for name in "life", "bullet", "rocket", "nuke", "bullet", "laser":
-        img = thorpy.load_image(name+".png", (255,255,255))
+        img = thorpy.load_image(name+".png", colorkey=(255,255,255))
         img = pygame.transform.smoothscale(img, CONTAINER_SIZE)
+        img.convert()
         container_imgs[name] = img
+    return loadbar
 
 def add_explosion(ship=None, size=None, pos=None):
     if not size:
