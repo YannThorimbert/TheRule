@@ -8,18 +8,12 @@ from gamelogic import *
 from graphics import debris_hero, fire_gen, smoke_gen, bullet_img
 import graphics, ship, menus, missions
 
-#regles simples : forme et couleur
-    # imgs vaisseaux precomputed, sizes limitees
-    #doit se tuer lui meme a la fin gnahahah
 
-
-#faire les dix niveaux
 #ennemis rapide et gragile
 #pas oublier ennemis fixes en debut de partie
 
-#scenario
+#firesmoke?
 
-#tuto!
 #boss final : hero libre
 
 #equilibrage
@@ -27,8 +21,6 @@ import graphics, ship, menus, missions
 #options : smoke
 #options : sons
 #options : debris
-
-#hauteur du son
 
 #stats post game + bouton pour visualer graph sur matplotlib
 # ##############################################################################

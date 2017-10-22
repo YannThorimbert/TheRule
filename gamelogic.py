@@ -30,6 +30,8 @@ class GameEvent:
 class GameAlert:
 
     def __init__(self, imgs, duration, pos):
+        if isinstance(imgs, str):
+            imgs = [thorpy.make_text(imgs, 20).get_image()]
         self.imgs = imgs
         self.duration = duration
         self.pos = pos
@@ -46,7 +48,7 @@ class GameAlert:
             r.top = y
         surface.blit(img, r)
         self.time += 1
-        return r.h
+        return r.h, self.pos
 
 mon = monitoring.Monitor()
 
@@ -72,7 +74,6 @@ class Game:
         self.ship_prob = 0.5
         self.ennemy_prob = 0.5
         #
-        self.ennemy_prob
         self.damage_rail_m = -1
         self.damage_rail_M = W + 1
         self.tot_time = 1000
@@ -106,10 +107,13 @@ class Game:
         self.e_pause = thorpy.make_text("Pause - press a key to continue", 20, (255,255,0))
         self.e_pause.center(element=self.e_background)
         #
-        self.scenario = {}
+        self.scenario = Scenario()
 
     def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
+
+    def add_text_alert(self, text, duration, pos=None):
+        self.alerts.append(GameAlert(text,duration,pos))
 
     def add_hint(self, h):
         self.hud.hints.add_hint(h)
@@ -153,7 +157,16 @@ class Game:
                 else:
                     ship = random_friend()
                 self.add_ship(ship)
-##        scenario = self.scenario.pop(self.i)
+        #
+        event = self.scenario.get_event()
+        if event:
+            print(event.i)
+            if event.text:
+                self.add_text_alert(event.text, event.duration)
+            for ship in event.ships:
+                self.add_ship(ship)
+            if event.action:
+                event.action()
 ##        if scenario:
 ##            self.add_ship(scenario)
 
@@ -228,17 +241,33 @@ class Game:
         ###mon.append("k")
         self.remaining_time = (self.tot_time - self.i) / self.tot_time
         if self.remaining_time < 0:
+            self.add_text_alert("Stage done!\nTouch a key to continue", 100)
+            self.refresh_and_draw_alerts()
+            thorpy.get_application().pause()
+            pygame.display.flip()
             thorpy.functions.quit_menu_func()
-            print("FINI")
+
+##    def refresh_and_draw_alerts(self):
+##        y = 80
+##        for i in range(len(self.alerts)-1,-1,-1):
+##            a = self.alerts[i]
+##            y += a.refresh(self.screen, y)
+##            if a.time > a.duration:
+##                a.time = 0
+##                self.alerts.pop(i)
 
     def refresh_and_draw_alerts(self):
-        y = 30
+        y = 80
+        for a in self.alerts:
+            h, pos = a.refresh(self.screen, y)
+            if pos:
+                y+= h
         for i in range(len(self.alerts)-1,-1,-1):
             a = self.alerts[i]
-            y += a.refresh(self.screen, y)
             if a.time > a.duration:
                 a.time = 0
                 self.alerts.pop(i)
+
 
     def add_ship(self, ship):
         self.ships.append(ship)
@@ -253,11 +282,13 @@ class Game:
                 self.damage_rail_M = rect.left
         img = self.rail.img
         s = pygame.Surface((rect.w, self.rail.rect.h))
-        s.fill((255,255,255))
+        s.fill((0,0,0))
         img.blit(s,(rect.x,0))
-        img.set_colorkey((255,255,255))
-##        self.rail.element.set_image(img)
+        img.set_colorkey((0,0,0))
 
+    def reinit(self):
+        self.i = 1
+        self.scenario = Scenario()
 ##    def showmon(self):
         ###mon.show()
 
@@ -284,6 +315,8 @@ def move_hero_down():
 def random_ennemy(pos=None, ship_class=None, factor=None, type_=None, mesh=None):
     if not ship_class:
         Coming = random.choice(shipm.coming_ennemies)
+    else:
+        Coming = ship_class
     if not factor:
         factor = random.choice(p.ENNEMIES_SIZES)
     if not type_:
@@ -299,6 +332,8 @@ def random_ennemy(pos=None, ship_class=None, factor=None, type_=None, mesh=None)
 def random_friend(pos=None, ship_class=None):
     if not ship_class:
         Coming = random.choice(shipm.coming_friends)
+    else:
+        Coming = ship_class
     mesh = shipm.container_mesh
     if not pos:
         pos = (random.randint(20,W-20),0)
@@ -308,17 +343,41 @@ def random_friend(pos=None, ship_class=None):
 
 
 
-##class ScenarioEvent:
-##
-##    def __init__(self, i, ship, pos=None, text=None):
-##        self.i = i
-##        self.ship = ship_class()
-##
-##
-##class Scenario:
-##
-##    def __init__(self):
-##        self.events = []
+class ScenarioEvent:
+
+    def __init__(self, i, ships=None, action=None, text=None, duration=100):
+        if i is None:
+            if not p.game.scenario.events:
+                prev = 0
+            else:
+                 prev = p.game.scenario.events[-1].i
+            i = prev + duration
+        p.game.scenario.events.append(self)
+        self.i = i
+        self.ships = ships
+        if not ships:
+            self.ships = []
+        self.action = action
+        if text:
+            self.text = thorpy.pack_text(p.W, text, thorpy.make_text(" ", 30))
+        else:
+            self.text = None
+        self.duration = duration
+
+
+class Scenario:
+
+    def __init__(self):
+        self.events = []
+
+    def sort(self):
+        self.events.sort(key=lambda x:x.i, reverse=True)
+
+    def get_event(self):
+        if self.events:
+            if self.events[-1].i == p.game.i:
+                return self.events.pop()
+
 ##
 ##    def add_ship(self, i, ship, pos=None, text=None):
 ##        event =

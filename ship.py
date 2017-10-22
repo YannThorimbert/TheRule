@@ -7,7 +7,7 @@ import graphics
 from bullet import Bullet, Rocket
 from thorpy._utils.colorscomputing import normalize_color
 
-ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,6)]
+ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,2)]
 container_fn = "xevin1.png"
 hero_fn = "xevin2.png"
 ennemies_meshes = {}

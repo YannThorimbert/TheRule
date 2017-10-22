@@ -3,10 +3,9 @@ from pygame.math import Vector2 as V2
 W,H = 400,600
 BACKGROUND_TEXTURES = "sand-texture.jpg", "rock.png", "Calinou1.png", "Calinou2.png", "Calinou3.png"
 
-##ENNEMIES_SIZES = [0.3, 0.5]
-ENNEMIES_SIZES = [0.2]
+ENNEMIES_SIZES = [0.25, 0.5]
+##ENNEMIES_SIZES = [0.2]
 
-#vessel colors are defined in ship.py
 
 ENGINE_FORCE = 0.3
 ENGINE_FORCE_IA = 0.1
@@ -41,5 +40,7 @@ USING_SHADOWS = True
 SHADOW_POS = (10,12)
 
 NSMOKE = 60 #1 = deactivate
+
+PNAME = "Hero"
 
 game = None

@@ -44,8 +44,8 @@ class HUD:
 ##        self.brln.set_main_color((200,200,220,180))
         self.br = thorpy.Box.make([self.bullets, self.rockets])
         self.ln = thorpy.Box.make([self.laser, self.nuke])
-        self.br.set_main_color((200,200,220,180))
-        self.ln.set_main_color((200,200,220,180))
+        self.br.set_main_color((200,200,220,100))
+        self.ln.set_main_color((200,200,220,100))
         #
 ##        self.bullets.stick_to("screen", "right", "right")
 ##        self.bullets.stick_to("screen", "bottom", "bottom", False)
