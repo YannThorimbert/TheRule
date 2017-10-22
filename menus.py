@@ -1,20 +1,28 @@
 import pygame, thorpy, graphics, parameters
 
+def launch_credits():
+    text = "This game was written by Yann Thorimbert for the 2017 PyWeek24 challenge.\n\n"+\
+            "The library Thorpy (www.thorpy.org), which makes use of Pygame, was used fot the"+\
+            " GUI and some effects like smog, shadows or explosions.\n\n"+\
+            "The filenames of the different sounds and images are named after their original author." +\
+            "\n\nFeel free to contact the author at yann.thorimbert@gmail.com."
+    text = thorpy.pack_text(parameters.W//2, text)
+    e = thorpy.make_textbox("Credits", text)
+    e.center()
+    launch(e)
+
+def launch_commands(after=None):
+    text = "<ARROWS>: move\n<SPACE>: gun\n<r>: rockets\n<LSHIFT>: laser\n<ENTER>: nuke\n<p>: pause\n<ESCAPE>: menu"
+    e = thorpy.make_textbox("Commands", text)
+    e.center()
+    launch(e,after)
+
 def mainmenu():
     W,H = thorpy.functions.get_screen_size()
     title = graphics.get_title()
-    def launch_credits():
-        text = "This game was written by Yann Thorimbert for the 2017 PyWeek24 challenge.\n\n"+\
-                "The library Thorpy (www.thorpy.org), which makes use of Pygame, was used fot the"+\
-                " GUI and some effects like smog, shadows or explosions.\n\n"+\
-                "The filenames of the different sounds and images are named after their original author." +\
-                "\n\nFeel free to contact the author at yann.thorimbert@gmail.com."
-        text = thorpy.pack_text(W//2, text)
-        thorpy.launch_blocking_alert("Credits",text,e,alpha_dialog=100)
     ##    box = thorpy.make_textbox("Credits", text, hline=100)
     ##    box.set_main_color((200,200,200,100))
     ##    thorpy.launch_blocking(box)
-
     e_start = thorpy.make_button("Start game", thorpy.functions.quit_menu_func)
     e_options, vs = get_options()
     e_credits = thorpy.make_button("Credits", launch_credits)
@@ -40,18 +48,18 @@ def mainmenu():
     thorpy.store(e)
     e.center()
     #
-    parameters.SOUND = vs.get_value("sound")
-    parameters.SMOKE = vs.get_value("sound")
-    parameters.DEBRIS = vs.get_value("sound")
-    #
     m = thorpy.Menu(e,fps=80)
     m.play()
+    #
+    parameters.SOUND = vs.get_value("sound")
+    parameters.NSMOKE = vs.get_value("smokes")
+    parameters.DEBRIS = vs.get_value("debris")
 
 def get_options():
     vs = thorpy.VarSet()
-    vs.add("sound", True, "Sound")
-    vs.add("smokes", True, "Smokes")
-    vs.add("debris", True, "Explosions")
+    vs.add("sound", parameters.SOUND, "Sound")
+    vs.add("smokes", parameters.NSMOKE, "Smokes", (1,100))
+    vs.add("debris", parameters.DEBRIS, "Explosions")
     e_options = thorpy.ParamSetterLauncher.make(vs, "Options", "Options")
     return e_options, vs
 
@@ -62,4 +70,12 @@ def choose_name():
     box.center()
     thorpy.launch_blocking(box)
     parameters.PNAME = name.get_value()
+
+def launch(e, after=None):
+    thorpy.launch_blocking(e)
+    if parameters.game:
+        parameters.game.draw()
+    if after:
+        after()
+    pygame.display.flip()
 

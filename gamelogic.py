@@ -110,6 +110,7 @@ class Game:
         self.scenario = Scenario()
         self.success = False
 ##        self.options = menus.get_options()
+        self.last_rocket =-10
 
     def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
@@ -139,8 +140,9 @@ class Game:
             if self.i%MOD_BULLET == 0:
                 self.hero.shoot((0,-BULLET_SPEED))
         elif pp[pygame.K_r]:
-            if self.i%MOD_ROCKET == 0:
+            if self.i - self.last_rocket > p.MOD_ROCKET:
                 self.hero.shoot_rocket((0,-ROCKET_SPEED))
+                self.last_rocket = self.i
         elif pp[pygame.K_LSHIFT]:
             self.hero.shoot_laser()
         elif pp[pygame.K_RETURN]:
@@ -152,20 +154,18 @@ class Game:
             thorpy.get_application().pause()
         elif pp[pygame.K_ESCAPE]:
             e_quit = thorpy.make_button("Quit", thorpy.functions.quit_func)
-##            e_continue = thorpy.make_button("Continue", thorpy.functions.quit_menu_func)
+            e_continue = thorpy.make_button("Continue", thorpy.functions.quit_menu_func)
             e_options, vs = menus.get_options()
-            box = thorpy.Box.make(elements=[e_options, e_quit])
-            box.center()
-            def draw():
-                print("uhuh")
-                screen.fill((0,0,0))
-                self.draw()
+            def redraw():
                 box.unblit_and_reblit()
-                pygame.display.flip()
-            thorpy.launch_blocking(box, func=draw)
+            e_commands = thorpy.make_button("Instructions", menus.launch_commands, {"after":redraw})
+            box = thorpy.Box.make(elements=[e_commands, e_options, e_quit, e_continue])
+            box.center()
+            menus.launch(box)
             p.SOUND = vs.get_value("sound")
-            p.SMOKE = vs.get_value("sound")
-            p.DEBRIS = vs.get_value("sound")
+            p.NSMOKE = vs.get_value("smokes")
+            p.DEBRIS = vs.get_value("debris")
+
 
     def add_random_ship(self):
         if self.i % self.ship_flux == 0:
@@ -180,6 +180,7 @@ class Game:
         if event:
             print(event.i)
             if event.text:
+                self.alerts = []
                 self.add_text_alert(event.text, event.duration)
             for ship in event.ships:
                 self.add_ship(ship)
@@ -194,7 +195,7 @@ class Game:
         if self.laser == 0:#last
             r = self.laser_img.get_rect()
             for y in range(r.y,r.bottom,10):
-                g.fire_gen.generate((self.hero.pos.x,y))
+                g.smoke_gen.generate((self.hero.pos.x,y))
 
     def refresh(self):
         ##mon.append("a")
@@ -259,10 +260,15 @@ class Game:
         ###mon.append("k")
         self.remaining_time = (self.tot_time - self.i) / self.tot_time
         if self.remaining_time < 0:
-            self.success = True
-            txt = thorpy.pack_text(W//2, "Congratulations. The time is elapsed and you survived.")
-            thorpy.launch_blocking_alert("Stage completed!", txt)
-            thorpy.functions.quit_menu_func()
+            if self.hero.life > 0:
+                self.success = True
+                txt = thorpy.pack_text(W//2, "Congratulations. The time is elapsed and you survived.")
+                thorpy.launch_blocking_alert("Stage completed!", txt)
+                thorpy.functions.quit_menu_func()
+            else:
+                txt = thorpy.pack_text(W//2, "You failed at the last minute...")
+                thorpy.launch_blocking_alert("Try again!", txt)
+                thorpy.functions.quit_menu_func()
 
     def draw(self):
         # refresh screen
@@ -408,3 +414,47 @@ class Scenario:
 ##        event =
 
 
+
+def play_carreer(nmissions, starting_mission):
+    import missions
+    showtext = True
+    i = starting_mission
+    while i < nmissions:
+        if i == 0:
+            success = missions.tuto1(True)
+            if not success:
+                thorpy.launch_blocking_alert("You failed.", "Try again.")
+            else:
+                i += 1
+        elif i == 1:
+            success = missions.tuto2(True)
+            if not success:
+                thorpy.launch_blocking_alert("You failed.", "Try again.")
+            else:
+                i += 1
+        elif i < nmissions-1:
+            n = random.randint(1,3)
+            t = random.randint(2000,6000)
+            sp = 0.45 + random.random()*0.3*i/nmissions
+            ep = 0.5 + random.random()*0.3*i/nmissions
+            if ep > 0.7:
+                sp = 0.5
+            thorpy.launch_blocking_alert("Mission "+str(i-1)+"/"+str(nmissions-2), "Click when you are ready.")
+            success = missions.lambda_mission(ep, sp, t, n)
+            if not success:
+                thorpy.launch_blocking_alert("You failed", "Try again.")
+            else:
+                i += 1
+        else:
+            thorpy.launch_blocking_alert("Final mission", "Click when you are ready.")
+            success = missions.final_mission(showtext)
+            if not success:
+                showtext = False
+                thorpy.launch_blocking_alert("You failed.", "Try again.")
+            else:
+                i += 1
+
+    txt = thorpy.pack_text(W//2, "Congratulations, you defeated the mothership. This is the end of your fight.")
+    thorpy.launch_blocking_alert("The End.", txt)
+
+    menus.launch_credits()

@@ -75,10 +75,9 @@ class ShipMesh:
         if do_colors:
             self.color = (r//n + 20, g//n + 20, b//n + 20)
             self.color = normalize_color(self.color)
-            if p.DEBRIS:
-                self.debris = thorpy.fx.get_debris_generator(duration=50,
-                                                color=self.color,
-                                                max_size=8)
+            self.debris = thorpy.fx.get_debris_generator(duration=50,
+                                            color=self.color,
+                                            max_size=8)
             fn_colors[self.fn] = self.color
             fn_debris[self.fn] = self.debris
         else:
@@ -175,7 +174,7 @@ class Ship:
                     if self.collide(bullet.pos):
                         bullet.visible = False
                         self.life -= 1
-                        if self.debris:
+                        if self.debris and p.DEBRIS:
                             graphics.generate_debris_hit(V2(bullet.pos+(0,-10)),
                                                 V2(bullet.v),
                                                 self.debris)
@@ -186,10 +185,9 @@ class Ship:
                 if rocket.visible:
                     if self.collide(rocket.pos):
                         rocket.visible = False
-                        self.life -= 100
-                        if self.debris:
-                            graphics.generate_debris_hit(V2(rocket.pos+(0,-10)),
-                                                V2(rocket.v),
+                        self.life -= p.ROCKET_DAMAGE
+                        if self.debris and p.DEBRIS:
+                            graphics.generate_debris_explosion(V2(rocket.pos+(0,-10)),
                                                 self.debris)
 ##                        if self.life < self.max_life/2.:
 ##                            self.smoking = True
@@ -240,8 +238,9 @@ class Ship:
             else:
                 if self.rect.bottom < p.game.hero.rect.top:
                     p.game.add_alert("bad",pos=self.pos)
-                    p.game.ennemy_prob += 0.1
-            if self.debris:
+                    p.game.ennemy_prob += p.PROB_INCREASE
+                    print(p.game.ennemy_prob)
+            if self.debris and p.DEBRIS:
                 graphics.generate_debris_explosion(V2(self.pos), self.debris)
             if self.can_explode:
                 if p.DEBRIS:
@@ -307,7 +306,7 @@ class EnnemyFollower(Ship):
         if r.colliderect(p.game.hero.rect):
             p.game.hero.life = -1
             self.life = -1
-        elif self.pos.y < 3*p.H//4:
+        elif self.pos.y < 2*p.H//3:
             d = p.game.hero.pos - self.pos
             self.vel += d.normalize()*p.ENGINE_FORCE_IA*self.speed
             if random.random() < 0.1:
@@ -473,13 +472,14 @@ class Hero(Ship):
 
 def nuke_explosion():
     if p.SOUND: p.game.sounds.nuke.play()
-    for ship in p.game.ships[2:]:
-        ship.life = -1
-        if p.DEBRIS:
-            for i in range(10):
-                x,y = random.randint(0,graphics.W), random.randint(100,graphics.H-200)
-                graphics.add_explosion(size=(100,100), pos=(x,y))
-        p.game.add_alert("nuke", pos=(graphics.W/2,graphics.H/2))
+    for ship in p.game.ships:
+        if not(ship is p.game.rail) and not(ship is p.game.hero):
+            ship.life = -1
+            if p.DEBRIS:
+                for i in range(10):
+                    x,y = random.randint(0,graphics.W), random.randint(100,graphics.H-200)
+                    graphics.add_explosion(size=(100,100), pos=(x,y))
+            p.game.add_alert("nuke", pos=(graphics.W/2,graphics.H/2))
 
 coming_ennemies = []
 for ennemy in EnnemyFollower, EnnemySimple, EnnemyFast:

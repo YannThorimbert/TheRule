@@ -36,7 +36,7 @@ def launch_game(game, e_background):
     menu.play()
 
 
-def tuto1():
+def tuto1(text):
     game, e_background = get_game(0)
     game.ship_flux = 10000000000
     game.hero.life = 80
@@ -44,42 +44,44 @@ def tuto1():
     game.hero.laser = 0
     game.hero.nuke = 0
     game.hero.bullets = 0
-    game.ennemy_prob = 0.9
+    game.ennemy_prob = 0.5
     game.ship_prob = 0.6
     tmp = shipm.BulletContainer.speed
     shipm.BulletContainer.speed = 1.
-    ScenarioEvent(10, text="Hello, "+p.PNAME)
-    ScenarioEvent(None, text="Your ship cannot fly anymore. We've put it on rails, so that you can defend yourself a bit.",duration=280)
-    ScenarioEvent(None, text="You will have to survive in this environment for a while."+\
-                    "The top right bar indicates the time before you will be safe. Be careful, the alien vessels are around.",duration=380)
-    ScenarioEvent(None, ships=[random_friend(None, shipm.BulletContainer)],
-        text="Can you see these two friends? If you join them, they will provide"+\
-                    " you some bullets for your gun. Use keyboard arrows to slide on the rails and wait for the convoy.",duration=400)
-    ScenarioEvent(None, ships=[random_friend(None, shipm.BulletContainer)])
-    ScenarioEvent(None, text="Once you have bullets, you can use the gun with <SPACE>. "+\
-        "A bar in the bottom left indicates how much bullets are left. Try to fire a bit. But don't hurt friends convoys.", duration=400)
-    ScenarioEvent(None, ships=[random_friend(None, shipm.RocketContainer),
-                                random_friend(None, shipm.LaserContainer),
-                                random_friend(None, shipm.NukeContainer)],
-        text="Now I will show you three other types of weapons that you can obtain: rockets, laser and nuke... Obtain them.",duration=400)
-    ScenarioEvent(None, text="You can use rocket with <r>, laser with <Left SHIFT> and launch nuke with <ENTER>."+\
-        " A single rocket cause huge damages. Laser can kill multiple ennemies at the same time.", duration=400)
-    ScenarioEvent(None, text="Except yourself, the "+\
-        "nuke destroys everything, including your friends, so use it wisely. Also, if a convoy of nuke is"+\
-        " killed before you get it, the nuke it contains will explode.", duration=400)
-    ScenarioEvent(None, text="One last thing : some convoys like this one allow you to repair your vessel...", duration=300,
-                    ships=[random_friend("auto", shipm.LifeContainer)])
+    if True:
+        ScenarioEvent(10, text="Hello, "+p.PNAME, duration=200)
+        ScenarioEvent(None, text="Your ship cannot fly anymore. We've put it on rails, so that you can defend yourself a bit.",duration=280)
+        ScenarioEvent(None, text="Press <p> or <ESCAPE> at any moment to pause the game.",duration=280)
+        ScenarioEvent(None, text="You will have to survive in this environment for a while."+\
+                        "The top right bar indicates the time before you will be safe. Be careful, the alien vessels are around.",duration=380)
+        ScenarioEvent(None, ships=[random_friend(None, shipm.BulletContainer)],
+            text="Can you see these two friends? If you join them, they will provide"+\
+                        " you some bullets for your gun. Use keyboard arrows to slide on the rails and wait for the convoy.",duration=450)
+        ScenarioEvent(None, ships=[random_friend(None, shipm.BulletContainer)])
+        ScenarioEvent(None, text="Once you have bullets, you can use the gun with <SPACE>. "+\
+            "A bar in the bottom left indicates how much bullets are left. Try to fire a bit. But don't hurt friends convoys.", duration=450)
+        ScenarioEvent(None, ships=[random_friend(None, shipm.RocketContainer),
+                                    random_friend(None, shipm.LaserContainer),
+                                    random_friend(None, shipm.NukeContainer)],
+            text="Now I will show you three other types of weapons that you can obtain: rockets, laser and nuke... Obtain them.",duration=500)
+        ScenarioEvent(None, text="You can use rocket with <r>, laser with <Left SHIFT> and launch nuke with <ENTER>."+\
+            " A single rocket causes huge damages. Laser can kill multiple ennemies at the same time.", duration=450)
+        ScenarioEvent(None, text="Except yourself, the "+\
+            "nuke destroys everything, including your friends, so use it wisely. Also, if a convoy of nuke is"+\
+            " killed before you get it, the nuke it contains will explode.", duration=500)
+        ScenarioEvent(None, text="One last thing : some convoys like this one allow you to repair your vessel...", duration=350,
+                        ships=[random_friend("auto", shipm.LifeContainer)])
     def put_flux():
         p.game.ship_flux = 100
         shipm.BulletContainer.speed = tmp
-    ScenarioEvent(None, action=put_flux, text="Now, try to survive to these incoming aliens!", duration=280)
+    ScenarioEvent(None, action=put_flux, text="Now, try to survive to the incoming aliens!", duration=280)
     game.scenario.sort()
     game.tot_time = game.scenario.events[0].i + 1000
     launch_game(game, e_background)
     return game.success
 
 
-def tuto2():
+def tuto2(text):
     game, e_background = get_game(1)
     game.ship_flux = 10000000000
     game.hero.life = 100
@@ -89,12 +91,13 @@ def tuto2():
     game.hero.bullets = p.MAX_BULLET_NUMBER
     game.ennemy_prob = 0.6
     game.ship_prob = 0.6
-    ScenarioEvent(10, text=p.PNAME+", there are some rules that cannot be broken.", duration=280)
-    ScenarioEvent(None, text="Can you see the symbols on the top bar? They indicate"+\
-            " which vessels you should destroy. Only the ennemies corresponding to the right shape will be taken"+\
-            " into account in your score.", duration=400)
-    ScenarioEvent(None, text="Be careful with the Rule ; the more you kill ennemies that don't match"+\
-            " the symbols, the more numerous the other ones will come. There are right and bad kills.", duration=400)
+    if text:
+        ScenarioEvent(10, text=p.PNAME+", there are some rules that cannot be broken.", duration=280)
+        ScenarioEvent(None, text="Can you see the symbols on the top bar? They indicate"+\
+                " which vessels you should destroy. Only the ennemies corresponding to the right shape will be taken"+\
+                " into account in your score.", duration=400)
+        ScenarioEvent(None, text="Be careful with the Rule ; the more you kill ennemies that don't match"+\
+                " the symbols, the more numerous the other ones will come. There are right and bad kills.", duration=400)
     def put_flux():
         p.game.ship_flux = 100
     ScenarioEvent(None, action=put_flux, text="Now you know all what you needed to continue alone. Good luck.", duration=280)
@@ -117,7 +120,7 @@ def lambda_mission(ep, sp, t, n):
     game.ennemy_prob = ep
     game.ship_prob = sp
     game.tot_time = t
-    shapes = ["skorpio1.png", "skorpio4.png", "skorpio5.png", "xevin1.png"]
+    shapes = ["skorpio1.png", "skorpio4.png", "skorpio5.png"]
     shapes = random.sample(shapes, n)
     for fn in shapes:
         game.add_hint(hint.Hint(fn, ship.fn_shape[fn]))
@@ -137,7 +140,7 @@ def final_mission(text):
     shipm.LaserContainer.prob = 0
     shipm.BulletContainer.value = p.MAX_BULLET_NUMBER
     game.ennemy_prob = 0.5
-    game.ship_prob = 0.35
+    game.ship_prob = 0.5
     game.hero.vertical_vel = 1.
     #
     if text:
@@ -157,18 +160,18 @@ def final_mission(text):
     v2 = random_ennemy((v1.rect.left - 100, 300), shipm.EnnemyStatic, max(p.ENNEMIES_SIZES), "skorpio2.png")
     v3 = random_ennemy((v1.rect.right + 100, 300), shipm.EnnemyStatic, max(p.ENNEMIES_SIZES), "skorpio3.png")
     #
-    mothership.set_life(1000)
-    aisle_left.set_life(300)
-    aisle_right.set_life(300)
-    v1.set_life(200)
-    v2.set_life(200)
-    v3.set_life(200)
+    mothership.set_life(p.ROCKET_DAMAGE*8)
+    aisle_left.set_life(p.ROCKET_DAMAGE*5)
+    aisle_right.set_life(p.ROCKET_DAMAGE*5)
+    v1.set_life(p.ROCKET_DAMAGE*2)
+    v2.set_life(p.ROCKET_DAMAGE*3)
+    v3.set_life(p.ROCKET_DAMAGE*2)
     #
     def put_flux():
         p.game.ship_flux = 100
     ScenarioEvent(None, action=put_flux, ships=[mothership,aisle_left,aisle_right,v1,v2,v3])
     game.scenario.sort()
-    game.tot_time = game.scenario.events[-1].i + 60
+    game.tot_time = game.scenario.events[-1].i + 6000
     shapes = ["xevin1.png"]
     for fn in shapes:
         game.add_hint(hint.Hint(fn, ship.fn_shape[fn]))
