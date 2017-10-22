@@ -7,7 +7,7 @@ import graphics
 from bullet import Bullet, Rocket
 from thorpy._utils.colorscomputing import normalize_color
 
-ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,2)]
+ennemies_fn = ["skorpio"+str(i)+".png" for i in range(1,6)]
 container_fn = "xevin1.png"
 hero_fn = "xevin2.png"
 ennemies_meshes = {}
@@ -26,12 +26,17 @@ class Mesh:
         self.size = self.img.get_size()
         self.color = None
         self.debris = None
+        self.fn = None
+        self.id = None
 
 
 class ShipMesh:
 
     def __init__(self, fn, factor, rotate=True, colorkey=(255,255,255)):
         self.fn = fn
+        self.id = self.fn
+        if "skorpio2" in self.fn or "skorpio3" in self.fn:
+            self.id = "skorpio1.png"
         self.img = thorpy.load_image(fn)
         if rotate:
             self.img = pygame.transform.rotate(self.img, 180)
@@ -44,6 +49,7 @@ class ShipMesh:
         self.size = self.img.get_size()
         self.collisions = [[False for y in range(h)] for x in range(w)]
         self.color = None
+        self.debris = None
         self.build_collision_matrix()
         if thorpy.constants.CAN_SHADOWS:
             self.shadow = thorpy.graphics.get_shadow(self.img, alpha_factor=0.5)
@@ -69,7 +75,8 @@ class ShipMesh:
         if do_colors:
             self.color = (r//n + 20, g//n + 20, b//n + 20)
             self.color = normalize_color(self.color)
-            self.debris = thorpy.fx.get_debris_generator(duration=50,
+            if p.DEBRIS:
+                self.debris = thorpy.fx.get_debris_generator(duration=50,
                                                 color=self.color,
                                                 max_size=8)
             fn_colors[self.fn] = self.color
@@ -117,6 +124,7 @@ def initialize_meshes(loadbar):
 class Ship:
     meshname = "noname"
     id = 0
+    speed = 1.
 
     def __init__(self, mesh, pos, bullets=100, shadow=True):
         self.mesh = mesh
@@ -142,6 +150,10 @@ class Ship:
 ##        self.original_img = self.element.get_image()
         self.is_friend = False
 
+    def set_life(self, life):
+        self.life = life
+        self.max_life = life
+
     def collide(self, pos):
         dx = pos[0] - self.rect.x
         dy = pos[1] - self.rect.y
@@ -154,7 +166,7 @@ class Ship:
 
 
     def at_explode(self):
-        p.game.sounds.explosion.play()
+        if p.SOUND: p.game.sounds.explosion.play()
 
     def process_bullets(self):
         for bullet in p.game.bullets:
@@ -174,7 +186,7 @@ class Ship:
                 if rocket.visible:
                     if self.collide(rocket.pos):
                         rocket.visible = False
-                        self.life = -1
+                        self.life -= 100
                         if self.debris:
                             graphics.generate_debris_hit(V2(rocket.pos+(0,-10)),
                                                 V2(rocket.v),
@@ -190,9 +202,10 @@ class Ship:
                 dx = abs(self.pos.x - p.game.hero.pos.x)
                 if dx < (p.LASER_W+self.rect.w)//2:
                     self.life = -1
-                    graphics.generate_debris_hit(V2(self.pos),
-                                        V2(self.vel),
-                                        self.debris)
+                    if p.DEBRIS:
+                        graphics.generate_debris_hit(V2(self.pos),
+                                            V2(self.vel),
+                                            self.debris)
 
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
@@ -220,16 +233,19 @@ class Ship:
                     self.can_explode = False
                     self.debris = None
                     p.game.add_alert("item",pos=self.pos)
-                else:
-                    p.game.add_alert("bad",pos=self.pos)
-            elif self.hints_ids == p.game.hints_ids:
-                if self.pos.y < p.game.hero.pos.y:
+            elif self.mesh.id in p.game.hints_ids:
+                if self.rect.bottom < p.game.hero.rect.top:
                     p.game.add_alert("nice",pos=self.pos)
                     p.game.score += 1
+            else:
+                if self.rect.bottom < p.game.hero.rect.top:
+                    p.game.add_alert("bad",pos=self.pos)
+                    p.game.ennemy_prob += 0.1
             if self.debris:
                 graphics.generate_debris_explosion(V2(self.pos), self.debris)
             if self.can_explode:
-                graphics.add_explosion(self)
+                if p.DEBRIS:
+                    graphics.add_explosion(self)
                 self.at_explode()
 
     def move(self, delta):
@@ -238,7 +254,7 @@ class Ship:
 
     def shoot(self, vel):
         if self.bullets > 0:
-            p.game.sounds.bullet.play()
+            if p.SOUND: p.game.sounds.bullet.play()
             if len(p.game.bullets) > p.MAX_BULLET_NUMBER:
                 p.game.bullets.popleft()
             v = V2(vel)
@@ -254,7 +270,12 @@ class EnnemyStatic(Ship):
         self.bullets = self.life
 
     def ia(self):
-        pass
+        r = self.rect
+        if r.colliderect(p.game.hero.rect):
+            p.game.hero.life = -1
+            self.life = -1
+        if random.random() < 0.01:
+            self.shoot(V2(p.game.hero.pos-self.pos).normalize()*p.BULLET_SPEED/2.)
 
 class EnnemySimple(Ship):
     prob = 4
@@ -272,7 +293,7 @@ class EnnemySimple(Ship):
             p.game.add_rail_damage(r)
             self.life = -1
         else:
-            self.vel += V2(0,1)*p.ENGINE_FORCE_IA
+            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*self.speed
 
 class EnnemyFollower(Ship):
     prob = 4
@@ -288,16 +309,19 @@ class EnnemyFollower(Ship):
             self.life = -1
         elif self.pos.y < 3*p.H//4:
             d = p.game.hero.pos - self.pos
-            self.vel += d.normalize()*p.ENGINE_FORCE_IA
+            self.vel += d.normalize()*p.ENGINE_FORCE_IA*self.speed
             if random.random() < 0.1:
                 self.shoot(self.vel.normalize()*p.BULLET_SPEED)
         elif r.bottom > p.game.hero.pos.y:
             p.game.add_rail_damage(r)
             self.life = -1
         else:
-            self.vel += V2(0,1)*p.ENGINE_FORCE_IA
+            self.vel += V2(0,1)*p.ENGINE_FORCE_IA*self.speed
 ##        graphics.fire_gen.generate(self.pos)
 
+class EnnemyFast(EnnemyFollower):
+    prob = 3
+    speed = 3.
 
 class ContainerShip(Ship):
     speed = 2.
@@ -410,9 +434,11 @@ class Hero(Ship):
     def process_physics(self):
         self.vel -= p.DRAG*self.vel #natural braking due to drag
         if self.pos.x > p.game.damage_rail_M and self.vel.x > 0: #bounce on the right
-            self.vel *= -0.9
+            self.vel.x *= -0.9
         elif self.pos.x < p.game.damage_rail_m and self.vel.x < 0: #bounce on the left
-            self.vel *= -0.9
+            self.vel.x *= -0.9
+        elif self.pos.y > p.H:
+            self.vel.y *= -abs(self.vel.y)
 
     def ia(self):
         # process key pressed
@@ -427,7 +453,7 @@ class Hero(Ship):
 
     def shoot_rocket(self, vel):
         if self.rockets > 0:
-            p.game.sounds.rocket.play()
+            if p.SOUND: p.game.sounds.rocket.play()
             if len(p.game.rockets) > p.MAX_ROCKET_NUMBER:
                 p.game.rockets.popleft()
             v = V2(vel)
@@ -436,7 +462,7 @@ class Hero(Ship):
 
     def shoot_laser(self):
         if self.laser > 0:
-            p.game.sounds.laser.play()
+            if p.SOUND: p.game.sounds.laser.play()
             p.game.laser = p.LASER_TIME
             self.laser -= 1
 
@@ -446,16 +472,17 @@ class Hero(Ship):
             nuke_explosion()
 
 def nuke_explosion():
-    p.game.sounds.nuke.play()
+    if p.SOUND: p.game.sounds.nuke.play()
     for ship in p.game.ships[2:]:
         ship.life = -1
-        for i in range(10):
-            x,y = random.randint(0,graphics.W), random.randint(100,graphics.H-200)
-            graphics.add_explosion(size=(100,100), pos=(x,y))
+        if p.DEBRIS:
+            for i in range(10):
+                x,y = random.randint(0,graphics.W), random.randint(100,graphics.H-200)
+                graphics.add_explosion(size=(100,100), pos=(x,y))
         p.game.add_alert("nuke", pos=(graphics.W/2,graphics.H/2))
 
 coming_ennemies = []
-for ennemy in EnnemyFollower, EnnemySimple:
+for ennemy in EnnemyFollower, EnnemySimple, EnnemyFast:
     coming_ennemies += [ennemy]*ennemy.prob
 coming_friends = []
 for friend in LifeContainer, BulletContainer, RocketContainer, LaserContainer, NukeContainer:

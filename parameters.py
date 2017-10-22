@@ -29,7 +29,7 @@ BULLET_SIZE_ON_2 = V2(BULLET_SIZE, BULLET_SIZE)/2
 
 
 MAX_BULLET_NUMBER = 100 #max number of bullets on screen
-MAX_ROCKET_NUMBER = 100 #max number of bullets on screen
+MAX_ROCKET_NUMBER = 10 #max number of bullets on screen
 MAX_LASER_NUMBER = 1
 MAX_NUKE_NUMBER = 1
 
@@ -42,5 +42,9 @@ SHADOW_POS = (10,12)
 NSMOKE = 60 #1 = deactivate
 
 PNAME = "Hero"
+
+SOUND = True
+SMOKE = True
+DEBRIS = True
 
 game = None

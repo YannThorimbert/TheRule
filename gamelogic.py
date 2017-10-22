@@ -8,6 +8,7 @@ from hud import HUD
 from parameters import W, H, ENGINE_FORCE, MOD_BULLET, BULLET_SPEED, ROCKET_SPEED, MOD_ROCKET
 import parameters as p
 import graphics as g
+import menus
 
 import thorpy.gamestools.monitoring as monitoring
 
@@ -31,7 +32,7 @@ class GameAlert:
 
     def __init__(self, imgs, duration, pos):
         if isinstance(imgs, str):
-            imgs = [thorpy.make_text(imgs, 20).get_image()]
+            imgs = [thorpy.make_text(imgs, 20, font_color=(0,0,255)).get_image()]
         self.imgs = imgs
         self.duration = duration
         self.pos = pos
@@ -96,7 +97,6 @@ class Game:
         self.alerts = []
         #
         self.sounds = thorpy.SoundCollection()
-##        self.sounds.add("battlestar10_2.wav", "explosion1")
         self.sounds.add("MikeKoenig2.wav", "bullet")
         self.sounds.add("SoundExplorer2.wav", "nuke")
         self.sounds.add("MikeKoenig3b.wav", "rocket")
@@ -108,6 +108,8 @@ class Game:
         self.e_pause.center(element=self.e_background)
         #
         self.scenario = Scenario()
+        self.success = False
+##        self.options = menus.get_options()
 
     def add_alert(self, a, duration=80, pos=None):
         self.alerts.append(GameAlert(self.a_imgs[a],duration,pos))
@@ -118,7 +120,7 @@ class Game:
     def add_hint(self, h):
         self.hud.hints.add_hint(h)
         self.hints.append(h)
-        self.hints_ids.add(h.id)
+        self.hints_ids.add(h.name)
 
     def process_key_pressed(self):
         pp = pygame.key.get_pressed()
@@ -148,6 +150,22 @@ class Game:
             self.e_pause.blit()
             pygame.display.flip()
             thorpy.get_application().pause()
+        elif pp[pygame.K_ESCAPE]:
+            e_quit = thorpy.make_button("Quit", thorpy.functions.quit_func)
+##            e_continue = thorpy.make_button("Continue", thorpy.functions.quit_menu_func)
+            e_options, vs = menus.get_options()
+            box = thorpy.Box.make(elements=[e_options, e_quit])
+            box.center()
+            def draw():
+                print("uhuh")
+                screen.fill((0,0,0))
+                self.draw()
+                box.unblit_and_reblit()
+                pygame.display.flip()
+            thorpy.launch_blocking(box, func=draw)
+            p.SOUND = vs.get_value("sound")
+            p.SMOKE = vs.get_value("sound")
+            p.DEBRIS = vs.get_value("sound")
 
     def add_random_ship(self):
         if self.i % self.ship_flux == 0:
@@ -241,12 +259,18 @@ class Game:
         ###mon.append("k")
         self.remaining_time = (self.tot_time - self.i) / self.tot_time
         if self.remaining_time < 0:
-            self.add_text_alert("Stage done!\nTouch a key to continue", 100)
-            self.refresh_and_draw_alerts()
-            thorpy.get_application().pause()
-            pygame.display.flip()
+            self.success = True
+            txt = thorpy.pack_text(W//2, "Congratulations. The time is elapsed and you survived.")
+            thorpy.launch_blocking_alert("Stage completed!", txt)
             thorpy.functions.quit_menu_func()
 
+    def draw(self):
+        # refresh screen
+        self.e_background.blit()
+        for s in self.ships:
+            if s.shadow:
+                self.screen.blit(s.shadow, V2(s.rect.topleft)+p.SHADOW_POS)
+            self.screen.blit(s.img, s.rect)
 ##    def refresh_and_draw_alerts(self):
 ##        y = 80
 ##        for i in range(len(self.alerts)-1,-1,-1):
@@ -274,17 +298,18 @@ class Game:
 ##        self.e_background.add_elements([ship.element])
 
     def add_rail_damage(self, rect):
-        if rect.right < self.hero.pos.x:
-            if rect.right > self.damage_rail_m:
-                self.damage_rail_m = rect.right
-        elif rect.left > self.hero.pos.x:
-            if rect.left < self.damage_rail_M:
-                self.damage_rail_M = rect.left
-        img = self.rail.img
-        s = pygame.Surface((rect.w, self.rail.rect.h))
-        s.fill((0,0,0))
-        img.blit(s,(rect.x,0))
-        img.set_colorkey((0,0,0))
+        if not self.hero.vertical_vel:
+            if rect.right < self.hero.pos.x:
+                if rect.right > self.damage_rail_m:
+                    self.damage_rail_m = rect.right
+            elif rect.left > self.hero.pos.x:
+                if rect.left < self.damage_rail_M:
+                    self.damage_rail_M = rect.left
+            img = self.rail.img
+            s = pygame.Surface((rect.w, self.rail.rect.h))
+            s.fill((0,0,0))
+            img.blit(s,(rect.x,0))
+            img.set_colorkey((0,0,0))
 
     def reinit(self):
         self.i = 1
@@ -351,7 +376,7 @@ class ScenarioEvent:
                 prev = 0
             else:
                  prev = p.game.scenario.events[-1].i
-            i = prev + duration
+            i = prev + duration + 10
         p.game.scenario.events.append(self)
         self.i = i
         self.ships = ships

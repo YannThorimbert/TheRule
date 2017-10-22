@@ -35,6 +35,6 @@ class Rocket(Bullet):
     def draw(self):
         if self.visible:
             thorpy.get_screen().blit(graphics.rocket_img, self.pos)
-            graphics.smoke_gen.generate(self.pos+self.smokedelta)
+            graphics.fire_gen.generate(self.pos+self.smokedelta)
 
 
